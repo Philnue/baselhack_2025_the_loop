@@ -1,0 +1,6 @@
+*
+!/app/*
+!./pyproject.toml
+!./uv.lock
+__pycache__/
+*.py[cod]

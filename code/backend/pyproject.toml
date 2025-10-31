@@ -1,0 +1,64 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.120.4",
+    "langchain>=1.0.3",
+    "langchain-core>=1.0.2",
+    "langchain-openai>=1.0.1",
+    "langgraph>=1.0.2",
+    "psycopg>=3.2.12",
+    "pydantic>=2.12.3",
+    "pydantic-settings>=2.11.0",
+    "sqlmodel>=0.0.27",
+    "uvicorn[standard]>=0.38.0",
+]
+
+[dependency-groups]
+dev = [
+    "fastapi-cli>=0.0.14",
+    "ipykernel>=7.1.0",
+    "mypy>=1.18.2",
+    "python-dotenv>=1.2.1",
+    "ruff>=0.14.3",
+]
+
+[tool.ruff.lint]
+extend-select = [
+    "A",  # flake8-builtins
+    "B",  # flake8-bugbear
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "G010",  # flake8-logging-format (logging-warn)
+    "I",  # isort
+    "TID",  # flake8-tidy-imports
+    "SIM",  # flake8-simplify
+]
+extend-ignore = [
+    "B008",  # allow function calls in argument defaults
+    "B019",  # allow functools.lru_cache and functools.cache
+    "E111",  # indentation is not a multiple of {indent_width} -> handled by code formatter
+    "E114",  # indentation is not a multiple of {indent_width} (comment) -> handled by code formatter
+    "E117",  # over-indented (comment) -> handled by code formatter
+    "E203",  # allow whitespaces before symbols
+    "E501",  # line too long -> handled by code formatter
+    "E701",  # allow multiple statements on one line
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+lines-between-types = 1
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
