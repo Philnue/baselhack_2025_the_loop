@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -35,6 +36,7 @@ const MenuIcon = () => (
 
 export function GlobalNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -42,6 +44,13 @@ export function GlobalNavbar() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(path);
   };
 
   // Handle Escape key to close mobile menu and prevent body scroll
@@ -81,13 +90,21 @@ export function GlobalNavbar() {
         <nav className="hidden md:flex lg:hidden absolute left-1/2 -translate-x-1/2 items-center gap-8">
           <Link
             href="/"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className={`text-sm font-medium transition-all px-3 py-2 ${
+              isActive("/")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
           >
             Dashboard
           </Link>
           <Link
             href="/discussions"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className={`text-sm font-medium transition-all px-3 py-2 ${
+              isActive("/discussions")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
           >
             Discussions
           </Link>
@@ -108,13 +125,21 @@ export function GlobalNavbar() {
           <nav className="hidden lg:flex items-center gap-8">
             <Link
               href="/"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className={`text-sm font-medium transition-all px-3 py-2 ${
+                isActive("/")
+                  ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                  : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+              }`}
             >
               Dashboard
             </Link>
             <Link
               href="/discussions"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className={`text-sm font-medium transition-all px-3 py-2 ${
+                isActive("/discussions")
+                  ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                  : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+              }`}
             >
               Discussions
             </Link>
@@ -124,7 +149,7 @@ export function GlobalNavbar() {
             <Link href="/discussions/new">
               <Button
                 variant="default"
-                className="h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] transition-colors"
+                className="h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] active:bg-[#6B0038] transition-all active:scale-[0.98]"
               >
                 Create New
               </Button>
@@ -142,27 +167,35 @@ export function GlobalNavbar() {
             : "max-h-0 opacity-0 overflow-hidden"
         }`}
       >
-        <nav className="flex flex-col px-6 py-6 gap-6">
+        <nav className="flex flex-col px-6 py-6 gap-2">
           <Link
             href="/"
             onClick={closeMobileMenu}
-            className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
+            className={`text-base font-medium transition-all px-4 py-3 ${
+              isActive("/")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
           >
             Dashboard
           </Link>
           <Link
             href="/discussions"
             onClick={closeMobileMenu}
-            className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
+            className={`text-base font-medium transition-all px-4 py-3 ${
+              isActive("/discussions")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
           >
             Discussions
           </Link>
           
-          <div className="flex flex-col gap-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col gap-4 pt-4 border-t border-gray-200 mt-2">
             <Link href="/discussions/new" onClick={closeMobileMenu}>
               <Button
                 variant="default"
-                className="w-full h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] transition-colors"
+                className="w-full h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] active:bg-[#6B0038] transition-all active:scale-[0.98]"
               >
                 Create New
               </Button>
