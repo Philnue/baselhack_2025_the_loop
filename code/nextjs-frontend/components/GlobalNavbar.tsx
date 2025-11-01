@@ -99,6 +99,16 @@ export function GlobalNavbar() {
             Dashboard
           </Link>
           <Link
+            href="/home"
+            className={`text-sm font-medium transition-all px-3 py-2 ${
+              isActive("/home")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
+          >
+            Home
+          </Link>
+          <Link
             href="/discussions"
             className={`text-sm font-medium transition-all px-3 py-2 ${
               isActive("/discussions")
@@ -127,6 +137,16 @@ export function GlobalNavbar() {
               href="/"
               className={`text-sm font-medium transition-all px-3 py-2 ${
                 isActive("/")
+                  ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                  : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/home"
+              className={`text-sm font-medium transition-all px-3 py-2 ${
+                isActive("/home")
                   ? "text-[#A8005C] underline underline-offset-4 decoration-2"
                   : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
               }`}
@@ -178,6 +198,17 @@ export function GlobalNavbar() {
             }`}
           >
             Dashboard
+          </Link>
+          <Link
+            href="/home"
+            onClick={closeMobileMenu}
+            className={`text-base font-medium transition-all px-4 py-3 ${
+              isActive("/home")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
+          >
+            Home
           </Link>
           <Link
             href="/discussions"
