@@ -2,7 +2,6 @@ from collections.abc import Generator
 
 from fastapi import Request
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.engine.mock import MockConnection
 from sqlmodel import Session, SQLModel
 
 
@@ -11,5 +10,5 @@ def get_session(request: Request) -> Generator[Session, None, None]:
         yield session
 
 
-def create_db_and_tables(engine: Engine | Connection | MockConnection) -> None:
+def create_db_and_tables(engine: Engine | Connection) -> None:
     SQLModel.metadata.create_all(engine)
