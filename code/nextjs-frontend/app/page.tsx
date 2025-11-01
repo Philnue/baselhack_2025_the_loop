@@ -11,7 +11,7 @@ export default function Dashboard() {
         
         {/* Pill-shaped container (updated text and style) */}
         <div className="mb-8 rounded-full border border-pink-500  px-5 py-2 text-sm font-medium text-pink-700">
-          <span>AI powered consensus building</span>
+          <span>From every opinion, a shared decision.</span>
         </div>
 
         {/* Main heading - Adjusted font size for responsive design */}
