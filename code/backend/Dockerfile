@@ -4,7 +4,7 @@ FROM base AS requirements-stage
 
 WORKDIR /tmp
 
-COPY --from=artifacts.endress.com/docker-ghcr-mirror/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 COPY ./pyproject.toml ./uv.lock /tmp/
 

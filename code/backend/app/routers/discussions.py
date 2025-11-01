@@ -1,5 +1,7 @@
 import uuid
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from sqlmodel import Session, select
@@ -11,6 +13,7 @@ from app.models.discussion import (
     DiscussionPublic,
     DiscussionPublicWithMessages,
     DiscussionUpdate,
+    Message,
 )
 from app.settings import settings
 
@@ -102,7 +105,7 @@ def update_discussion(
         )
 
     discussion_data = discussion.model_dump(exclude={"owner_id"}, exclude_unset=True)
-    db_discussion.sqlmodel_update(discussion_data)
+    db_discussion.sqlmodel_update(discussion_data, update={"updated_at": datetime.now()})
     session.add(db_discussion)
     session.commit()
     session.refresh(db_discussion)

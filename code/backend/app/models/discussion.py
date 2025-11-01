@@ -1,6 +1,7 @@
 import enum
 import uuid
 
+from datetime import datetime
 from typing import Annotated
 
 from sqlmodel import ARRAY, Column, Enum, Field, Relationship, SQLModel, Text
@@ -23,7 +24,11 @@ class DiscussionBase(SQLModel):
 class Discussion(DiscussionBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     owner_id: uuid.UUID
-    messages: list["Message"] = Relationship(back_populates="discussion")
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    messages: list["Message"] = Relationship(
+        back_populates="discussion", cascade_delete=True, sa_relationship_kwargs={"order_by": "Message.created_at"}
+    )
 
 
 class DiscussionCreate(DiscussionBase):
@@ -32,6 +37,8 @@ class DiscussionCreate(DiscussionBase):
 
 class DiscussionPublic(DiscussionBase):
     id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
 
 
 class DiscussionPublicWithMessages(DiscussionPublic):
@@ -54,6 +61,8 @@ class MessageBase(SQLModel):
 class Message(MessageBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     owner_id: uuid.UUID
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     discussion: Discussion = Relationship(back_populates="messages")
 
 
@@ -63,11 +72,15 @@ class MessageCreate(MessageBase):
 
 class MessagePublic(MessageBase):
     id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
 
 
 class MessagePublicWithoutDiscussionId(SQLModel):
     id: uuid.UUID
     message: str
+    created_at: datetime
+    updated_at: datetime
 
 
 class MessagePublicWithDiscussion(MessagePublicWithoutDiscussionId):

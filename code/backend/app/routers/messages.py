@@ -1,5 +1,7 @@
 import uuid
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from sqlmodel import Session
@@ -89,7 +91,7 @@ def update_message(message_id: uuid.UUID, message: MessageUpdate, session: Sessi
         )
 
     message_data = message.model_dump(exclude={"owner_id"}, exclude_unset=True)
-    db_message.sqlmodel_update(message_data)
+    db_message.sqlmodel_update(message_data, update={"updated_at": datetime.now()})
     session.add(db_message)
     session.commit()
     session.refresh(db_message)
