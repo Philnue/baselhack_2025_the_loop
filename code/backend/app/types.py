@@ -1,5 +1,7 @@
 from enum import Enum
 
+from pydantic import BaseModel, Field
+
 
 class Category(str, Enum):
     BINARY_PROPOSAL = "BINARY_PROPOSAL"
@@ -72,3 +74,45 @@ class DeliveryStatus(str, Enum):
     ON_TRACK = "ON_TRACK"
     AT_RISK = "AT_RISK"
     BLOCKED = "BLOCKED"
+
+
+class CommonDimensions(BaseModel):
+    theme: str | None = None
+    sentiment: Sentiment
+    emotion: Emotion
+    is_critical_opinion: bool
+    risk_flag: bool
+    confidence: float = Field(ge=0.0, le=1.0)
+    relevancy: float = Field(ge=0, le=1.0)
+    is_against: IsAgainst
+    evidence_type: EvidenceType
+
+    stance_sentiment_mismatch: bool | None = None
+    confidence_evidence_mismatch: bool | None = None
+
+    text: str
+
+
+class BinaryProposal(CommonDimensions):
+    is_agreeing: IsAgreeing
+
+
+class PrioritizationRanking(CommonDimensions):
+    priority_class: PriorityClass
+
+
+class BrainstormingIdeation(CommonDimensions):
+    actionability: Actionability
+
+
+class FeedbackRetrospective(CommonDimensions):
+    impact_direction: ImpactDirection
+
+
+class ForecastingPlanning(CommonDimensions):
+    delivery_status: DeliveryStatus
+
+
+Dimensions = (
+    BinaryProposal | PrioritizationRanking | BrainstormingIdeation | FeedbackRetrospective | ForecastingPlanning
+)

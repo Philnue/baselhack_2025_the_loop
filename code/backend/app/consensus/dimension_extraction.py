@@ -5,21 +5,19 @@ from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
 from langgraph.graph import END, START, StateGraph
-from pydantic import BaseModel, Field
+from langgraph.graph.state import CompiledStateGraph
+from pydantic import BaseModel
 
-from app.consensus.types import (
-    Actionability,
+from app.models import Discussion
+from app.types import (
+    BinaryProposal,
+    BrainstormingIdeation,
     Category,
-    DeliveryStatus,
-    Emotion,
-    EvidenceType,
-    ImpactDirection,
-    IsAgainst,
-    IsAgreeing,
-    PriorityClass,
-    Sentiment,
+    Dimensions,
+    FeedbackRetrospective,
+    ForecastingPlanning,
+    PrioritizationRanking,
 )
-from app.models.discussion import Discussion
 
 
 DIMENSION_EXTRACTION_SYSTEM_PROMPT = """You are an information extractor. Given a known category, a topic, and a text note, you must extract standardized dimensions.
@@ -118,48 +116,6 @@ If a value cannot be determined, use null (for strings) or the nearest valid def
 Do not add extra fields. Do not include explanations."""
 
 
-class CommonDimensions(BaseModel):
-    theme: str | None = None
-    sentiment: Sentiment
-    emotion: Emotion
-    is_critical_opinion: bool
-    risk_flag: bool
-    confidence: float = Field(ge=0.0, le=1.0)
-    relevancy: float = Field(ge=0, le=1.0)
-    is_against: IsAgainst
-    evidence_type: EvidenceType
-
-    stance_sentiment_mismatch: bool | None = None
-    confidence_evidence_mismatch: bool | None = None
-
-    text: str
-
-
-class BinaryProposal(CommonDimensions):
-    is_agreeing: IsAgreeing
-
-
-class PrioritizationRanking(CommonDimensions):
-    priority_class: PriorityClass
-
-
-class BrainstormingIdeation(CommonDimensions):
-    actionability: Actionability
-
-
-class FeedbackRetrospective(CommonDimensions):
-    impact_direction: ImpactDirection
-
-
-class ForecastingPlanning(CommonDimensions):
-    delivery_status: DeliveryStatus
-
-
-Dimensions = (
-    BinaryProposal | PrioritizationRanking | BrainstormingIdeation | FeedbackRetrospective | ForecastingPlanning
-)
-
-
 CATEGORY_EXTRACTION_PROMPT_TEMPLATE = ChatPromptTemplate.from_messages(
     [
         ("system", DIMENSION_EXTRACTION_SYSTEM_PROMPT),
@@ -243,4 +199,4 @@ dimension_extraction_graph_builder.add_edge("extraction_brainstorming_ideation_d
 dimension_extraction_graph_builder.add_edge("extraction_feedback_retrospective_dimensions", END)
 dimension_extraction_graph_builder.add_edge("extraction_forecasting_planning_dimensions", END)
 
-dimension_extraction_graph = dimension_extraction_graph_builder.compile()
+dimension_extraction_graph: CompiledStateGraph = dimension_extraction_graph_builder.compile()

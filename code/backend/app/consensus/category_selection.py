@@ -4,10 +4,11 @@ from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
-from app.consensus.types import Category
-from app.models.discussion import Discussion
+from app.models import Discussion
+from app.types import Category
 
 
 CATEGORY_EXTRACTION_SYSTEM_PROMPT = """You are a classifier. Your task is to read a short "name" and "description" and assign EXACTLY ONE category from this fixed set:
@@ -97,4 +98,4 @@ category_selection_graph_builder.add_conditional_edges(
 category_selection_graph_builder.add_edge("extract_category_from_discussion_template", END)
 category_selection_graph_builder.add_edge("extract_category_from_discussion", END)
 
-category_selection_graph = category_selection_graph_builder.compile()
+category_selection_graph: CompiledStateGraph = category_selection_graph_builder.compile()

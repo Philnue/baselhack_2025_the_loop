@@ -1,4 +1,3 @@
-import enum
 import uuid
 
 from datetime import datetime
@@ -6,17 +5,11 @@ from typing import Annotated, Any
 
 from sqlmodel import ARRAY, JSON, Column, Enum, Field, Relationship, SQLModel, Text
 
-
-class DiscussionTemplate(str, enum.Enum):
-    BINARY_PROPOSAL = "BINARY_PROPOSAL"
-    PRIORITIZATION_RANKING = "PRIORITIZATION_RANKING"
-    BRAINSTORMING_IDEATION = "BRAINSTORMING_IDEATION"
-    FEEDBACK_RETROSPECTIVE = "FEEDBACK_RETROSPECTIVE"
-    FORECASTING_PLANNING = "FORECASTING_PLANNING"
+from app.types import Category
 
 
 class DiscussionBase(SQLModel):
-    template: Annotated[DiscussionTemplate | None, Field(sa_column=Column(Enum(DiscussionTemplate)))] = None
+    template: Annotated[Category | None, Field(sa_column=Column(Enum(Category)))] = None
     name: str = Field(sa_type=Text)
     description: str = Field(sa_type=Text)
     tags: set[str] = Field(default_factory=set, sa_column=Column(ARRAY(item_type=Text, as_tuple=True)))

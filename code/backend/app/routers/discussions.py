@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.models.discussion import (
+from app.models import (
     Discussion,
     DiscussionCreate,
     DiscussionPublic,
