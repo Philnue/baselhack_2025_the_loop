@@ -76,6 +76,7 @@ class Message(MessageBase, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     discussion: Discussion = Relationship(back_populates="messages")
+    upvotes: list["Upvote"] = Relationship(back_populates="message", cascade_delete=True)
 
 
 class MessageCreate(MessageBase):
@@ -104,3 +105,24 @@ class MessagePublicWithDiscussion(MessagePublicWithoutDiscussionId):
 class MessageUpdate(SQLModel):
     owner_id: uuid.UUID
     message: str | None = None
+
+
+class UpvoteBase(SQLModel):
+    message_id: uuid.UUID = Field(primary_key=True, foreign_key="message.id")
+    user_id: uuid.UUID = Field(primary_key=True)
+
+
+class Upvote(UpvoteBase, table=True):
+    message: Message = Relationship(back_populates="upvotes")
+
+
+class UpvoteCreate(UpvoteBase):
+    pass
+
+
+class UpvotePublic(UpvoteBase):
+    pass
+
+
+class UpvotePublicWithMessage(UpvotePublic):
+    message: MessagePublic
