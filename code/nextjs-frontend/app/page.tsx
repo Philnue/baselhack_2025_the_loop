@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
@@ -31,9 +32,12 @@ export default function Dashboard() {
           <Button
             variant="default"
             size="lg"
+            asChild
             className="h-12 rounded-sm bg-[#A8005C] px-8 text-white hover:bg-[#8A004B] transition-colors" // Updated color
           >
-            <p className="text-sm font-bold">Start a Discussion</p>
+            <Link href="/discussions/new">
+              <p className="text-sm font-bold">Start a Discussion</p>
+            </Link>
           </Button>
           <Button
             variant="outline"
