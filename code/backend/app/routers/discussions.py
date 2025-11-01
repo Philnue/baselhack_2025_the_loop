@@ -13,7 +13,6 @@ from app.models.discussion import (
     DiscussionPublic,
     DiscussionPublicWithMessages,
     DiscussionUpdate,
-    Message,
 )
 from app.settings import settings
 
