@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Loop - BaselHack 2025</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      overflow-x: hidden;
+      background: #fff;
+      color: #000;
+    }
+    
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+    }
+    
+    #content {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Ensure firework section content is above contrast layer */
+    .section-firework {
+      position: relative;
+      z-index: 1;
+      isolation: isolate;
+    }
+    
+    .section {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 2rem;
+      text-align: center;
+      position: relative;
+      transform: translateY(-7.5vh);
+    }
+    
+    /* Ensure all content within sections moves together */
+    .section:not(.section-welcome) > * {
+      transform: translateY(0);
+    }
+    
+    /* First section (welcome) - keep text centered with animation */
+    .section.section-welcome {
+      transform: translateY(0) !important;
+    }
+    
+    .section.section-welcome > * {
+      transform: translateY(0) !important;
+    }
+    
+    /* Contrast layer for firework section - covers full viewport and extends beyond */
+    .section-firework::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: calc(100vh + 15vh);
+      background: rgba(255, 255, 255, 0.9);
+      z-index: 0;
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    
+    /* Show contrast layer when firework section is in view */
+    .section-firework.is-visible::before {
+      opacity: 1;
+    }
+    
+    /* Solid white background for Team section */
+    .section-team::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      z-index: -1;
+    }
+    
+    .title {
+      font-size: 4rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .section p {
+      font-size: 2rem;
+      line-height: 2;
+      margin: 1rem 0;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+      position: relative;
+      z-index: 2;
+    }
+    
+    .section-welcome p {
+      color: #A8005C;
+      font-weight: 600;
+    }
+    
+    .section-firework .title {
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    .section-firework p {
+      color: #A8005C;
+      -webkit-text-stroke: 1px #A8005C;
+      text-stroke: 1px #A8005C;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.2);
+    }
+    
+    .section-consenza .title {
+      color: #000000;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    .section-consenza p {
+      color: #A8005C;
+      -webkit-text-stroke: 1px #A8005C;
+      text-stroke: 1px #A8005C;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.2);
+    }
+    
+    .section-image {
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Use drop-shadow for transparent images - respects alpha channel */
+    .section-image.image-transparent {
+      box-shadow: none;
+      filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.6));
+    }
+    
+    .section-image.small {
+      max-width: 50vw;
+      max-height: 40vh;
+    }
+    
+    .section-image.large {
+      max-width: 80vw;
+      max-height: 60vh;
+    }
+    
+    .team-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      max-width: 90vw;
+      margin-top: 2rem;
+    }
+    
+    .team-member {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+    
+    .team-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-bottom: 1rem;
+    }
+    
+    .team-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    .team-position {
+      font-size: 0.9rem;
+      color: rgba(0, 0, 0, 0.7);
+      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    }
+    
+    .navigation-controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-button {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      color: #000000;
+      padding: 0.75rem 1.5rem;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      min-width: 100px;
+    }
+    
+    .nav-button:hover:not(:disabled) {
+      background: rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .nav-button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    
+    .nav-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .section-indicator {
+      color: rgba(0, 0, 0, 0.7);
+      font-size: 0.9rem;
+      padding: 0 1rem;
+      white-space: nowrap;
+    }
+    
+    .keyboard-hint {
+      position: fixed;
+      bottom: 0.5rem;
+      right: 1rem;
+      z-index: 100;
+      color: rgba(0, 0, 0, 0.4);
+      font-size: 0.75rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="content"></div>
+  <div class="navigation-controls">
+    <button id="prev-button" class="nav-button">← Previous</button>
+    <div class="section-indicator">
+      <span id="current-section">1</span> / <span id="total-sections">8</span>
+    </div>
+    <button id="next-button" class="nav-button">Next →</button>
+  </div>
+  <div class="keyboard-hint">
+    Use ← → or Space to navigate
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
