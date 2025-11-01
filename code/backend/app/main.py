@@ -11,7 +11,7 @@ from sqlmodel import create_engine
 
 from app.database import create_db_and_tables
 from app.logging import HealthCheckFilter
-from app.routers import discussions, messages
+from app.routers import discussions, messages, reports
 from app.settings import settings
 
 
@@ -46,6 +46,7 @@ if settings.cors_origins:
 
 app.include_router(discussions.router)
 app.include_router(messages.router)
+app.include_router(reports.router)
 
 
 if __name__ == "__main__":
