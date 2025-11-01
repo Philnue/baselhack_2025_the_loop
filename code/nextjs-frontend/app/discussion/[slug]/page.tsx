@@ -1,160 +1,345 @@
 'use client';
 
-import { useState } from 'react';
-import { Heart } from 'lucide-react';
+import * as React from 'react';
+import { use } from 'react';
 
-type Opinion = {
-  id: number;
-  author: string;
-  time: string;
-  text: string;
-  initialUpvotes: number;
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { getOrCreateUserId } from '@/lib/utils';
+import { createMessageService } from '@/app/discussions/MessagesService';
+
+type DiscussionMessage = {
+  readonly id: string;
+  readonly owner_id: string;
+  readonly message: string;
+  readonly created_at?: string;
 };
 
-const opinionsData: Opinion[] = [
-  {
-    id: 1,
-    author: 'Anonymous Panda',
-    time: '5 hours ago',
-    text: 'The focus should be on output, not presence. With the right tools and processes, teams can be even more productive remotely. The cost savings on office space alone are a huge incentive for companies to embrace this shift fully.',
-    initialUpvotes: 8,
-  },
-  {
-    id: 2,
-    author: 'Anonymous Bird',
-    time: '2 hours ago',
-    text: 'I believe a hybrid model is the most sustainable approach. It offers the flexibility employees desire while maintaining the collaborative benefits of in-person interaction. Forcing a full return to the office could lead to a significant loss of talent.',
-    initialUpvotes: 12,
-  },
-  {
-    id: 3,
-    author: 'Anonymous Pig',
-    time: '1 day ago',
-    text: "Full-time office work fosters a stronger company culture and allows for spontaneous collaboration that you just can't replicate over a video call. We should be encouraging people to come back to the office, not stay home.",
-    initialUpvotes: 8,
-  },
-];
+type MessageApiResponse = {
+  id?: string;
+  owner_id?: string;
+  message?: string;
+  created_at?: string;
+};
 
-function Tag({ label }: { label: string }) {
-  return (
-    <span className="inline-block rounded-full border border-pink-400 px-4 py-1 text-sm font-medium text-pink-700">
-      {label}
-    </span>
-  );
+type DiscussionDetails = {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly tags: string[];
+  readonly owner_id: string;
+  readonly created_at?: string;
+};
+
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+function formatRelativeTime(dateIso?: string) {
+  if (!dateIso) {
+    return '';
+  }
+
+  const date = new Date(dateIso);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const now = Date.now();
+  const diffMs = date.getTime() - now;
+  const diffSec = Math.round(diffMs / 1000);
+  const absSec = Math.abs(diffSec);
+
+  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ['year', 60 * 60 * 24 * 365],
+    ['month', 60 * 60 * 24 * 30],
+    ['week', 60 * 60 * 24 * 7],
+    ['day', 60 * 60 * 24],
+    ['hour', 60 * 60],
+    ['minute', 60],
+    ['second', 1],
+  ];
+
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  for (const [unit, secondsInUnit] of units) {
+    if (absSec >= secondsInUnit || unit === 'second') {
+      const value = Math.round(diffSec / secondsInUnit);
+      return formatter.format(value, unit);
+    }
+  }
+
+  return '';
 }
 
-function OpinionCard({ opinion }: { opinion: Opinion }) {
-  const [upvotes, setUpvotes] = useState(opinion.initialUpvotes);
-  const [isUpvoted, setIsUpvoted] = useState(false);
+export default function DiscussionPage({ params }: Props) {
+  const { slug } = use(params);
+  const userId = React.useMemo(() => getOrCreateUserId(), []);
 
-  const handleUpvote = () => {
-    if (isUpvoted) {
-      setUpvotes(upvotes - 1);
-      setIsUpvoted(false);
-    } else {
-      setUpvotes(upvotes + 1);
-      setIsUpvoted(true);
+  const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(null);
+  const [messages, setMessages] = React.useState<DiscussionMessage[]>([]);
+  const [newOpinion, setNewOpinion] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
+  const [hasSubmitted, setHasSubmitted] = React.useState(false);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchDiscussionData() {
+      setIsLoading(true);
+      setLoadError(null);
+
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://fastapi.nutline.cloud/';
+        const normalized = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+
+        const detailPromise = fetch(`${normalized}discussions/${slug}`, {
+          signal: controller.signal,
+        });
+        const messagesPromise = fetch(`${normalized}messages/?discussion_id=${slug}`, {
+          signal: controller.signal,
+        });
+
+        const [detailRes, messagesRes] = await Promise.all([detailPromise, messagesPromise]);
+
+        const combinedMessages: DiscussionMessage[] = [];
+
+        const collectMessages = (payload: unknown) => {
+          if (!payload) {
+            return;
+          }
+
+          const extractArray = (value: unknown): unknown[] | null => {
+            if (Array.isArray(value)) {
+              return value;
+            }
+
+            if (typeof value === 'object' && value !== null) {
+              const possibleItems = (value as { items?: unknown; messages?: unknown }).items;
+              if (Array.isArray(possibleItems)) {
+                return possibleItems;
+              }
+
+              const possibleMessages = (value as { messages?: unknown }).messages;
+              if (Array.isArray(possibleMessages)) {
+                return possibleMessages;
+              }
+            }
+
+            return null;
+          };
+
+          const candidates = extractArray(payload);
+          if (!candidates) {
+            return;
+          }
+
+          for (const item of candidates) {
+            if (typeof item === 'object' && item !== null) {
+              const messageItem = item as MessageApiResponse;
+              combinedMessages.push({
+                id: String(messageItem.id ?? crypto.randomUUID()),
+                owner_id: String(messageItem.owner_id ?? 'unknown'),
+                message: String(messageItem.message ?? ''),
+                created_at: messageItem.created_at,
+              });
+            }
+          }
+        };
+
+        if (detailRes.ok) {
+          const detailJson = await detailRes.json();
+          setDiscussion({
+            id: detailJson.id ?? slug,
+            name: detailJson.name ?? detailJson.title ?? 'Discussion topic',
+            description:
+              detailJson.description ??
+              'This discussion gathers insights from participants. Final copy will arrive once the backend response is wired.',
+            tags: Array.isArray(detailJson.tags) ? detailJson.tags : [],
+            owner_id: detailJson.owner_id ?? 'unknown',
+            created_at: detailJson.created_at,
+          });
+
+          collectMessages(detailJson.messages);
+        } else {
+          throw new Error(`Unable to fetch discussion ${slug}`);
+        }
+
+        if (messagesRes.ok) {
+          const messagesJson = await messagesRes.json();
+          collectMessages(messagesJson);
+        }
+
+        const uniqueMessages = Array.from(
+          new Map(combinedMessages.map((item) => [item.id, item])).values()
+        );
+
+        uniqueMessages.sort((a, b) => {
+          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return bTime - aTime;
+        });
+
+        setMessages(uniqueMessages);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error('Failed to load discussion details', error);
+          setLoadError('We could not load this discussion. Please try again later.');
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchDiscussionData();
+
+    return () => controller.abort();
+  }, [slug]);
+
+  React.useEffect(() => {
+    setHasSubmitted(messages.some((message) => message.owner_id === userId));
+  }, [messages, userId]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitError(null);
+
+    if (hasSubmitted) {
+      return;
+    }
+
+    const trimmedMessage = newOpinion.trim();
+    if (!trimmedMessage) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await createMessageService({
+        message: trimmedMessage,
+        discussion_id: slug,
+        owner_id: userId,
+      });
+
+      const newEntry: DiscussionMessage = {
+        id: response.id ?? crypto.randomUUID(),
+        owner_id: response.owner_id ?? userId,
+        message: response.message ?? trimmedMessage,
+        created_at: response.created_at,
+      };
+
+      setMessages((prev) => [newEntry, ...prev]);
+      setNewOpinion('');
+  setHasSubmitted(true);
+    } catch (error) {
+      console.error('Failed to submit message', error);
+      setSubmitError('Unable to submit your opinion right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <span className="font-semibold text-gray-700">{opinion.author}</span>
-        <span>•</span>
-        <span>{opinion.time}</span>
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4 rounded-lg border border-gray-200 bg-white px-8 py-6 shadow-sm">
+          <span className="size-10 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--brand)]" aria-hidden="true" />
+          <p className="text-sm text-gray-600">Loading discussion…</p>
+        </div>
       </div>
+    );
+  }
 
-      <p className="my-4 text-base text-gray-800">{opinion.text}</p>
-
-      <div className="flex justify-end">
-        <button
-          onClick={handleUpvote}
-          className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors
-            ${
-              isUpvoted
-                ? 'border-pink-300 bg-pink-50 text-pink-700'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-            }
-          `}
-        >
-          <Heart
-            className="h-4 w-4"
-            fill={isUpvoted ? 'currentColor' : 'none'}
-          />
-          Upvote ({upvotes})
-        </button>
+  if (loadError || !discussion) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="max-w-md rounded-lg border border-gray-200 bg-white px-6 py-8 text-center shadow-sm">
+          <h1 className="text-lg font-semibold text-gray-900">Unable to load discussion</h1>
+          <p className="mt-2 text-sm text-gray-600">{loadError ?? 'The discussion details are unavailable at the moment.'}</p>
+        </div>
       </div>
-    </div>
-  );
-}
-
-export default function DiscussionPage() {
-  const [newOpinion, setNewOpinion] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting opinion:', newOpinion);
-    setNewOpinion('');
-  };
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-3xl space-y-8 px-4">
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <h1 className="mb-3 text-3xl font-bold text-gray-900">
-            How can we improve team collaboration?
-          </h1>
-          <p className="mb-6 text-lg text-gray-600">
-            A discussion on the evolving landscape of work environments,
-            exploring the pros and cons of remote, hybrid, and in-office models
-            to find a sustainable path forward.
-          </p>
-          <div className="flex gap-2">
-            <Tag label="#Tag1" />
-            <Tag label="#Tag2" />
-            <Tag label="#Tag3" />
-          </div>
-        </div>
+          <h1 className="mb-3 text-3xl font-bold text-gray-900">{discussion.name}</h1>
+          <p className="mb-6 text-lg text-gray-600">{discussion.description}</p>
+          {discussion.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {discussion.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-block rounded-full border border-pink-400 px-4 py-1 text-sm font-medium text-pink-700"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+  </div>
 
         <div className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-          <form onSubmit={handleSubmit}>
-            <label
-              htmlFor="opinion"
-              className="mb-2 block text-lg font-semibold text-gray-800"
-            >
-              Share your opinion
-            </label>
-            <textarea
-              id="opinion"
-              name="opinion"
-              rows={5}
-              className="w-full rounded-lg border border-gray-300 p-4 text-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-              placeholder="What are your thoughts?"
-              value={newOpinion}
-              onChange={(e) => setNewOpinion(e.target.value)}
-            />
-            <div className="mt-4 flex justify-end">
-              <button
-                type="submit"
-                className="rounded-lg bg-[#9B2C6B] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#8A265F] focus:outline-none focus:ring-2 focus:ring-[#9B2C6B] focus:ring-offset-2"
-              >
-                Submit Opinion
-              </button>
-            </div>
-          </form>
+          {!hasSubmitted ? (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="opinion" className="block text-lg font-semibold text-gray-800">
+                  Share your opinion
+                </label>
+                <Textarea
+                  id="opinion"
+                  name="opinion"
+                  rows={5}
+                  className="bg-white"
+                  placeholder="What are your thoughts?"
+                  value={newOpinion}
+                  onChange={(e) => setNewOpinion(e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  className="bg-[#9B2C6B] text-white hover:bg-[#8A265F]"
+                  disabled={isSubmitting || !newOpinion.trim()}
+                >
+                  {isSubmitting ? 'Submitting…' : 'Submit Opinion'}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-sm text-gray-600">You have already shared your thoughts for this discussion.</p>
+          )}
         </div>
 
         <div>
-          <h2 className="mb-6 text-2xl font-semibold text-gray-900">
-            Opinions from other participants
-          </h2>
+          <h2 className="mb-6 text-2xl font-semibold text-gray-900">Opinions from other participants</h2>
           <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="flex max-h-96 flex-col gap-4 overflow-y-auto pr-2">
-              {opinionsData.map((opinion) => (
-                <OpinionCard key={opinion.id} opinion={opinion} />
-              ))}
-            </div>
+            {messages.length === 0 ? (
+              <p className="text-sm text-gray-500">No opinions yet. Be the first to share!</p>
+            ) : (
+              <div className="flex max-h-96 flex-col gap-4 overflow-y-auto pr-2">
+                {messages.map((message) => (
+                  <div key={message.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <span className="font-semibold text-gray-700">
+                        {message.owner_id === userId ? 'You' : 'Participant'}
+                      </span>
+                      {message.created_at && <span>{formatRelativeTime(message.created_at)}</span>}
+                    </div>
+                    <p className="mt-3 text-base text-gray-800">{message.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

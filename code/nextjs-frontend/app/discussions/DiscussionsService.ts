@@ -1,5 +1,3 @@
-import { json } from "stream/consumers";
-
 const baseUrl = "https://fastapi.nutline.cloud/";
 
 export async function getDiscussionsService() {
@@ -43,3 +41,4 @@ export async function createDiscussionService(
     throw error;
   }
 }
+

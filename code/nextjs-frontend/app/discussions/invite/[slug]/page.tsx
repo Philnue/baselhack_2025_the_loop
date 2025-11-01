@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from "react";
+import { use } from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
 import { Copy, Users } from "lucide-react";
@@ -8,52 +9,202 @@ import { Copy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { use } from "react";
+import { getOrCreateUserId } from "@/lib/utils";
+import { createMessageService } from "../../MessagesService";
 
-type Discussion = {
-    readonly title: string;
+type DiscussionDetails = {
+    readonly id: string;
+    readonly name: string;
     readonly description: string;
-    readonly createdAt: string;
+    readonly tags: string[];
+    readonly owner_id: string;
+    readonly created_at?: string;
     readonly participantCount: number;
 };
 
+type DiscussionMessage = {
+    readonly id: string;
+    readonly owner_id: string;
+    readonly message: string;
+    readonly created_at?: string;
+};
 
-export default function DiscussionPage({ params, }: { params: Promise<{ slug: string }> }) {
+type MessageApiResponse = {
+    id?: string;
+    owner_id?: string;
+    message?: string;
+    created_at?: string;
+};
+
+function formatRelativeTime(dateIso?: string) {
+    if (!dateIso) {
+        return "";
+    }
+
+    const date = new Date(dateIso);
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+
+    const now = Date.now();
+    const diffMs = date.getTime() - now;
+    const diffSec = Math.round(diffMs / 1000);
+    const absSec = Math.abs(diffSec);
+
+    const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+        ["year", 60 * 60 * 24 * 365],
+        ["month", 60 * 60 * 24 * 30],
+        ["week", 60 * 60 * 24 * 7],
+        ["day", 60 * 60 * 24],
+        ["hour", 60 * 60],
+        ["minute", 60],
+        ["second", 1],
+    ];
+
+    const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+    for (const [unit, secondsInUnit] of units) {
+        if (absSec >= secondsInUnit || unit === "second") {
+            const value = Math.round(diffSec / secondsInUnit);
+            return formatter.format(value, unit);
+        }
+    }
+
+    return "";
+}
+
+export default function DiscussionInvitePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
+    const userId = React.useMemo(() => getOrCreateUserId(), []);
 
-    const [shareUrl, setShareUrl] = React.useState<string>("");
+    const [shareUrl, setShareUrl] = React.useState("");
     const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string | null>(null);
     const [copyFeedback, setCopyFeedback] = React.useState<string | null>(null);
-    const [discussion, setDiscussion] = React.useState<Discussion | null>(null);
+    const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(null);
+    const [messages, setMessages] = React.useState<DiscussionMessage[]>([]);
+    const [newOpinion, setNewOpinion] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(true);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [loadError, setLoadError] = React.useState<string | null>(null);
+    const [submitError, setSubmitError] = React.useState<string | null>(null);
+        const [hasSubmitted, setHasSubmitted] = React.useState(false);
 
     React.useEffect(() => {
         const controller = new AbortController();
 
-        async function fetchDiscussion() {
+        async function fetchDiscussionData() {
             setIsLoading(true);
             setLoadError(null);
 
             try {
-                // TODO: Replace placeholder with API request when backend is ready.
-                await new Promise((resolve) => setTimeout(resolve, 800));
+                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://fastapi.nutline.cloud/";
+                const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 
-                if (controller.signal.aborted) {
-                    return;
-                }
-
-                setDiscussion({
-                    title: "How can we improve team collaboration?",
-                    description:
-                        "This discussion gathers ideas on how we can improve our workflows. Share your thoughts, experiments, and tools you believe could help the team move faster together.",
-                    createdAt: "July 26, 2024 at 10:00 AM",
-                    participantCount: 12,
+                const detailPromise = fetch(`${normalized}discussions/${slug}`, {
+                    signal: controller.signal,
                 });
+                const messagesPromise = fetch(`${normalized}messages/?discussion_id=${slug}`, {
+                    signal: controller.signal,
+                });
+
+                        const [detailRes, messagesRes] = await Promise.all([detailPromise, messagesPromise]);
+
+                        const combinedMessages: DiscussionMessage[] = [];
+
+                        const collectMessages = (payload: unknown) => {
+                            if (!payload) {
+                                return;
+                            }
+
+                            const extractArray = (value: unknown): unknown[] | null => {
+                                if (Array.isArray(value)) {
+                                    return value;
+                                }
+
+                                if (typeof value === "object" && value !== null) {
+                                    const possibleItems = (value as { items?: unknown; messages?: unknown }).items;
+                                    if (Array.isArray(possibleItems)) {
+                                        return possibleItems;
+                                    }
+
+                                    const possibleMessages = (value as { messages?: unknown }).messages;
+                                    if (Array.isArray(possibleMessages)) {
+                                        return possibleMessages;
+                                    }
+                                }
+
+                                return null;
+                            };
+
+                            const candidates = extractArray(payload);
+                            if (!candidates) {
+                                return;
+                            }
+
+                            for (const item of candidates) {
+                                if (typeof item === "object" && item !== null) {
+                                    const messageItem = item as MessageApiResponse;
+                                    combinedMessages.push({
+                                        id: String(messageItem.id ?? crypto.randomUUID()),
+                                        owner_id: String(messageItem.owner_id ?? "unknown"),
+                                        message: String(messageItem.message ?? ""),
+                                        created_at: messageItem.created_at,
+                                    });
+                                }
+                            }
+                        };
+
+                        if (detailRes.ok) {
+                            const detailJson = await detailRes.json();
+                            const participantCount = (() => {
+                                if (typeof detailJson.participant_count === "number") {
+                                    return detailJson.participant_count;
+                                }
+                                if (Array.isArray(detailJson.participants)) {
+                                    return detailJson.participants.length;
+                                }
+                                if (typeof detailJson.participantCount === "number") {
+                                    return detailJson.participantCount;
+                                }
+                                return 1;
+                            })();
+
+                            setDiscussion({
+                                id: detailJson.id ?? slug,
+                                name: detailJson.name ?? detailJson.title ?? "Discussion topic",
+                                description:
+                                    detailJson.description ??
+                                    "This discussion gathers insights from participants. Final copy will arrive once the backend response is wired.",
+                                tags: Array.isArray(detailJson.tags) ? detailJson.tags : [],
+                                owner_id: detailJson.owner_id ?? "unknown",
+                                created_at: detailJson.created_at,
+                                participantCount,
+                            });
+
+                            collectMessages(detailJson.messages);
+                        } else {
+                            throw new Error(`Unable to fetch discussion ${slug}`);
+                        }
+
+                        if (messagesRes.ok) {
+                            const messagesJson = await messagesRes.json();
+                            collectMessages(messagesJson);
+                        }
+
+                        const uniqueMessages = Array.from(
+                            new Map(combinedMessages.map((item) => [item.id, item])).values(),
+                        );
+
+                        uniqueMessages.sort((a, b) => {
+                            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                            return bTime - aTime;
+                        });
+
+                    setMessages(uniqueMessages);
             } catch (error) {
-                console.error("Unable to load discussion", error);
                 if (!controller.signal.aborted) {
-                    setLoadError("We could not load this discussion. Please try again shortly.");
+                    console.error("Failed to load invite data", error);
+                    setLoadError("We could not load this discussion. Please try again later.");
                 }
             } finally {
                 if (!controller.signal.aborted) {
@@ -62,7 +213,7 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
             }
         }
 
-        fetchDiscussion();
+        fetchDiscussionData();
 
         return () => controller.abort();
     }, [slug]);
@@ -72,9 +223,9 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
             return;
         }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? "http://localhost:3000";
-    const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
-    const url = `${normalizedBaseUrl}/discussion/${slug}`;
+        const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? "http://localhost:3000";
+        const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
+        const url = `${normalizedBaseUrl}/discussion/${slug}`;
         setShareUrl(url);
     }, [slug]);
 
@@ -118,6 +269,50 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
         }
     }, [shareUrl]);
 
+    React.useEffect(() => {
+        setHasSubmitted(messages.some((message) => message.owner_id === userId));
+    }, [messages, userId]);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        setSubmitError(null);
+
+        if (hasSubmitted) {
+            return;
+        }
+
+        const trimmedMessage = newOpinion.trim();
+        if (!trimmedMessage) {
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await createMessageService({
+                message: trimmedMessage,
+                discussion_id: slug,
+                owner_id: userId,
+            });
+
+            const newEntry: DiscussionMessage = {
+                id: response.id ?? crypto.randomUUID(),
+                owner_id: response.owner_id ?? userId,
+                message: response.message ?? trimmedMessage,
+                created_at: response.created_at,
+            };
+
+            setMessages((prev) => [newEntry, ...prev]);
+            setNewOpinion("");
+            setHasSubmitted(true);
+        } catch (error) {
+            console.error("Failed to submit message", error);
+            setSubmitError("Unable to submit your opinion right now. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     if (isLoading) {
         return (
             <main className="container mx-auto flex min-h-screen flex-col px-4 py-10 sm:px-6 lg:px-8">
@@ -149,9 +344,20 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
             <div className="mx-auto w-full max-w-4xl space-y-10">
                 <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--brand)]">New Discussion Created</p>
-                    <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">{discussion.title}</h1>
+                    <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">{discussion.name}</h1>
                     <p className="mt-4 text-base leading-7 text-muted-foreground">{discussion.description}</p>
-                    <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">Created on {discussion.createdAt}</p>
+                    <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
+                        Created {discussion.created_at ? formatRelativeTime(discussion.created_at) : "just now"}
+                    </p>
+                    {discussion.tags.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {discussion.tags.map((tag) => (
+                                <span key={tag} className="inline-flex items-center rounded-full border border-pink-400 px-3 py-1 text-sm font-medium text-pink-700">
+                                    #{tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 <section className="grid gap-6 md:grid-cols-[3fr_2fr]">
@@ -169,12 +375,7 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
                                     Invite by email
                                 </label>
                                 <div className="flex flex-col gap-3 sm:flex-row">
-                                    <Input
-                                        id="invite-email"
-                                        type="email"
-                                        placeholder="john.doe@example.com"
-                                        className="w-full bg-[#F8F9FA]"
-                                    />
+                                    <Input id="invite-email" type="email" placeholder="john.doe@example.com" className="w-full bg-[#F8F9FA]" />
                                     <Button className="w-full text-white sm:w-auto" style={{ backgroundColor: "var(--brand)" }}>
                                         Send
                                     </Button>
@@ -193,12 +394,7 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
                                 </label>
                                 <div className="flex flex-col gap-3 sm:flex-row">
                                     <Input id="discussion-link" readOnly value={shareUrl} className="w-full bg-background" />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={handleCopyLink}
-                                        className="w-full sm:w-auto"
-                                    >
+                                    <Button type="button" variant="outline" onClick={handleCopyLink} className="w-full sm:w-auto">
                                         {copyFeedback ?? (
                                             <span className="flex items-center gap-2">
                                                 <Copy className="size-4" />
@@ -239,35 +435,51 @@ export default function DiscussionPage({ params, }: { params: Promise<{ slug: st
 
                 <section className="rounded-xl border border-border bg-card shadow-sm">
                     <div className="border-b border-border px-6 py-4">
-                        <h2 className="text-lg font-semibold text-foreground">Share Your Perspective</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Share Your Opinion</h2>
                     </div>
-                    <div className="space-y-5 px-6 py-6">
-                        <form className="space-y-5">
-                            <div className="space-y-2">
-                                <label htmlFor="participant-name" className="text-sm font-medium text-foreground">
-                                    Your Name
-                                </label>
-                                <Input
-                                    id="participant-name"
-                                    placeholder="Enter your name"
-                                    autoComplete="name"
-                                    className="bg-[#F8F9FA]"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label htmlFor="participant-opinion" className="text-sm font-medium text-foreground">
-                                    Your Opinion
-                                </label>
-                                <Textarea
-                                    id="participant-opinion"
-                                    placeholder="Share your thoughts..."
-                                    className="bg-[#F8F9FA]"
-                                />
-                            </div>
-                            <Button type="submit" className="w-full text-white" style={{ backgroundColor: "var(--brand)" }}>
-                                Submit Opinion
-                            </Button>
-                        </form>
+                    <div className="space-y-6 px-6 py-6">
+                                                                        {!hasSubmitted ? (
+                                        <form onSubmit={handleSubmit} className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <Textarea
+                                                    id="participant-opinion"
+                                                    placeholder="Share your thoughts..."
+                                                    className="bg-[#F8F9FA]"
+                                                    rows={5}
+                                                    value={newOpinion}
+                                                    onChange={(event) => setNewOpinion(event.target.value)}
+                                                    disabled={isSubmitting}
+                                                />
+                                            </div>
+                                            {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+                                            <Button type="submit" className="w-full text-white" style={{ backgroundColor: "var(--brand)" }} disabled={isSubmitting || !newOpinion.trim()}>
+                                                {isSubmitting ? "Submitting…" : "Submit Opinion"}
+                                            </Button>
+                                        </form>
+                                    ) : (
+                                                        <p className="text-sm text-muted-foreground">You have already shared your perspective for this discussion.</p>
+                                    )}
+
+                        <div className="space-y-4">
+                            <h3 className="text-base font-semibold text-foreground">Recent opinions</h3>
+                            {messages.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No opinions yet. Be the first to share!</p>
+                            ) : (
+                                <div className="flex max-h-80 flex-col gap-4 overflow-y-auto pr-2">
+                                    {messages.map((message) => (
+                                        <div key={message.id} className="rounded-lg border border-border bg-background p-4 shadow-sm">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span className="font-semibold text-foreground">
+                                                    {message.owner_id === userId ? "You" : "Participant"}
+                                                </span>
+                                                {message.created_at && <span>{formatRelativeTime(message.created_at)}</span>}
+                                            </div>
+                                            <p className="mt-3 text-sm text-foreground/90">{message.message}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </section>
             </div>
