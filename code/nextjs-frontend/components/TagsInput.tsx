@@ -22,11 +22,24 @@ export function TagsInput({
 }: TagsInputProps) {
   const [inputValue, setInputValue] = React.useState("");
 
+  const commitTag = React.useCallback(() => {
+    if (!onAddTag) {
+      return;
+    }
+
+    const normalizedTag = inputValue.trim();
+    if (!normalizedTag) {
+      return;
+    }
+
+    onAddTag(normalizedTag);
+    setInputValue("");
+  }, [inputValue, onAddTag]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && inputValue.trim() && onAddTag) {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      onAddTag(inputValue.trim());
-      setInputValue("");
+      commitTag();
     }
   };
 
@@ -63,6 +76,7 @@ export function TagsInput({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          onBlur={commitTag}
           placeholder={tags.length === 0 ? placeholder : ""}
           className="min-w-[120px] flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
