@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 const Logo = () => (
   <svg width="42" height="30" viewBox="0 0 42 30" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -30,41 +32,53 @@ const MenuIcon = () => (
   </svg>
 );
 
+
 export function GlobalNavbar() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  // Handle Escape key to close mobile menu and prevent body scroll
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener("keydown", handleEscape);
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   return (
-    <header className="relative flex h-20 w-full items-center justify-between border-b border-gray-200 px-6 sm:px-10">
-      <div className="flex items-center gap-3">
-        <Link href="/">
-          <Logo />
-        </Link>
-        <Link href="/">
-          <span className="text-xl font-semibold text-gray-800 md:hidden lg:inline">
-            Consenza
-          </span>
-        </Link>
-      </div>
+    <>
+      <header className="relative flex h-20 w-full items-center justify-between border-b border-gray-200 px-6 sm:px-10 bg-white z-50">
+        <div className="flex items-center gap-3">
+          <Link href="/" onClick={closeMobileMenu}>
+            <Logo />
+          </Link>
+          <Link href="/" onClick={closeMobileMenu}>
+            <span className="text-xl font-semibold text-gray-800 md:hidden lg:inline">
+              Consenza
+            </span>
+          </Link>
+        </div>
 
-      <nav className="hidden md:flex lg:hidden absolute left-1/2 -translate-x-1/2 items-center gap-8">
-        <Link
-          href="/"
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Dashboard
-        </Link>
-        <Link
-          href="/discussions"
-          className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Discussions
-        </Link>
-      </nav>
-
-      <Button variant="ghost" size="icon" className="md:hidden">
-        <MenuIcon />
-      </Button>
-
-      <div className="hidden md:flex items-center gap-8">
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden md:flex lg:hidden absolute left-1/2 -translate-x-1/2 items-center gap-8">
           <Link
             href="/"
             className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -79,18 +93,86 @@ export function GlobalNavbar() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4">
-          <Link href="/discussions/new">
-            <Button
-              variant="default"
-              className="h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] transition-colors"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle mobile menu"
+          aria-expanded={isMobileMenuOpen}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <MenuIcon />}
+        </Button>
+
+        <div className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link
+              href="/"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Create New
-            </Button>
-          </Link>
-          <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+              Dashboard
+            </Link>
+            <Link
+              href="/discussions"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Discussions
+            </Link>
+          </nav>
+
+          <div className="flex items-center gap-4">
+            <Link href="/discussions/new">
+              <Button
+                variant="default"
+                className="h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] transition-colors"
+              >
+                Create New
+              </Button>
+            </Link>
+            <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+          </div>
         </div>
+      </header>
+
+      {/* Mobile Menu */}
+      <div
+        className={`fixed inset-x-0 top-20 z-40 bg-white border-b border-gray-200 md:hidden transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen
+            ? "max-h-[calc(100vh-5rem)] opacity-100 shadow-lg"
+            : "max-h-0 opacity-0 overflow-hidden"
+        }`}
+      >
+        <nav className="flex flex-col px-6 py-6 gap-6">
+          <Link
+            href="/"
+            onClick={closeMobileMenu}
+            className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
+          >
+            Dashboard
+          </Link>
+          <Link
+            href="/discussions"
+            onClick={closeMobileMenu}
+            className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors py-2"
+          >
+            Discussions
+          </Link>
+          
+          <div className="flex flex-col gap-4 pt-4 border-t border-gray-200">
+            <Link href="/discussions/new" onClick={closeMobileMenu}>
+              <Button
+                variant="default"
+                className="w-full h-10 rounded-md bg-[#A8005C] px-6 text-white hover:bg-[#8A004B] transition-colors"
+              >
+                Create New
+              </Button>
+            </Link>
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-gray-200"></div>
+            </div>
+          </div>
+        </nav>
       </div>
-    </header>
+    </>
   );
 }
