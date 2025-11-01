@@ -9,15 +9,15 @@ interface HeaderProps {
 
 export function Header({ showCreateButton = true }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo - shows full on desktop, just dot on mobile */}
         <div className="flex items-center gap-2">
-          <span className="hidden text-xl font-semibold sm:inline">Consenza</span>
+          <span className="hidden text-xl font-semibold sm:inline">
+            Consenza
+          </span>
           <div className="size-2 rounded-full bg-foreground"></div>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/"
@@ -33,21 +33,11 @@ export function Header({ showCreateButton = true }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Right side actions */}
         <div className="flex items-center gap-4">
           {showCreateButton && (
             <Button
               variant="default"
-              className="hidden text-white sm:inline-flex"
-              style={{ 
-                backgroundColor: 'var(--brand)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--brand-hover)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--brand)';
-              }}
+              className="hidden text-white sm:inline-flex bg-(--brand) hover:bg-(--brand-hover) transition-colors"
             >
               Create New
             </Button>
@@ -58,4 +48,3 @@ export function Header({ showCreateButton = true }: HeaderProps) {
     </header>
   );
 }
-
