@@ -1,15 +1,15 @@
-
 'use client';
 
 import * as React from 'react';
 import { use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Send, Heart, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { getOrCreateUserId, getSessionStorage, setSessionStorage } from '@/lib/utils';
 import { createMessageService } from '../../discussions/MessagesService';
+
 
 type DiscussionDetails = {
   readonly id: string;
@@ -25,6 +25,7 @@ type DiscussionMessage = {
   readonly owner_id: string;
   readonly message: string;
   readonly created_at?: string;
+  readonly upvotes: number;
 };
 
 type MessageApiResponse = {
@@ -32,6 +33,7 @@ type MessageApiResponse = {
   owner_id?: string;
   message?: string;
   created_at?: string;
+  upvotes?: number;
 };
 
 function formatRelativeTime(dateIso?: string) {
@@ -74,6 +76,7 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
   const { slug } = use(params);
   const userId = React.useMemo(() => getOrCreateUserId(), []);
   const submissionStorageKey = React.useMemo(() => `discussion-submitted-${slug}-${userId}`, [slug, userId]);
+  const upvoteStorageKey = React.useMemo(() => `discussion-upvoted-${slug}-${userId}`, [slug, userId]);
 
   const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(null);
   const [messages, setMessages] = React.useState<DiscussionMessage[]>([]);
@@ -83,6 +86,26 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
+  const [upvotedMessages, setUpvotedMessages] = React.useState(new Set<string>());
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  
+  React.useEffect(() => {
+    const storedUpvotes = getSessionStorage(upvoteStorageKey);
+    if (storedUpvotes) {
+      try {
+        const parsed = JSON.parse(storedUpvotes);
+        if (Array.isArray(parsed)) {
+          setUpvotedMessages(new Set(parsed));
+        }
+      } catch (e) {
+        console.error('Failed to parse upvoted messages from session storage', e);
+      }
+    }
+  }, [upvoteStorageKey]);
+
+  React.useEffect(() => {
+    setSessionStorage(upvoteStorageKey, JSON.stringify(Array.from(upvotedMessages)));
+  }, [upvotedMessages, upvoteStorageKey]);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -144,6 +167,7 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
                 owner_id: String(messageItem.owner_id ?? 'unknown'),
                 message: String(messageItem.message ?? ''),
                 created_at: messageItem.created_at,
+                upvotes: Number(messageItem.upvotes ?? 0),
               });
             }
           }
@@ -217,6 +241,7 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
     }
   }, [messages, submissionStorageKey, userId]);
 
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitError(null);
@@ -244,6 +269,7 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
         owner_id: response.owner_id ?? userId,
         message: response.message ?? trimmedMessage,
         created_at: response.created_at,
+        upvotes: 0,
       };
 
       setMessages((prev) => [newEntry, ...prev]);
@@ -257,6 +283,40 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
       setIsSubmitting(false);
     }
   };
+
+  const handleUpvote = (messageId: string) => {
+    const newUpvoted = new Set(upvotedMessages);
+    const isAlreadyUpvoted = newUpvoted.has(messageId);
+    let upvoteChange = 0;
+
+    if (isAlreadyUpvoted) {
+      newUpvoted.delete(messageId);
+      upvoteChange = -1;
+    } else {
+      newUpvoted.add(messageId);
+      upvoteChange = 1;
+    }
+
+    setUpvotedMessages(newUpvoted);
+
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, upvotes: Math.max(0, msg.upvotes + upvoteChange) }
+          : msg
+      )
+    );
+  };
+
+  const handleGenerateConsensus = async () => {
+    setIsGenerating(true);
+    console.log('Starting AI consensus generation for owner...');    
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+    
+    console.log('AI consensus generated!');
+    setIsGenerating(false);
+  };
+
 
   if (isLoading) {
     return (
@@ -280,6 +340,8 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
       </main>
     );
   }
+
+  const isOwner = discussion.owner_id === userId && discussion.owner_id !== 'unknown';
 
   return (
     <main className="container mx-auto flex min-h-screen flex-col px-4 py-10 sm:px-6 lg:px-8">
@@ -324,7 +386,7 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
         <section className="flex flex-col gap-6">
           <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="border-b border-border px-6 py-4">
-              <h2 className="text-lg font-semibold text-foreground">Share your perspective</h2>
+              <h2 className="font-sans text-lg font-semibold text-foreground">Share your perspective</h2>
             </div>
             <div className="space-y-6 px-6 py-6">
               {!hasSubmitted ? (
@@ -363,29 +425,72 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
 
           <div className="rounded-xl border border-border bg-card shadow-sm">
             <div className="border-b border-border px-6 py-4">
-              <h2 className="text-lg font-semibold text-foreground">Recent opinions</h2>
+              <h2 className="font-sans text-lg font-semibold text-foreground">Recent opinions</h2>
             </div>
             <div className="flex flex-col gap-4 px-6 py-6 pr-3">
               {messages.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No opinions yet. Be the first to share!</p>
               ) : (
                 <div className="flex max-h-[32rem] flex-col gap-4 overflow-y-auto">
-                  {messages.map((message) => (
-                    <div key={message.id} className="rounded-lg border border-border bg-background p-4 shadow-sm">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">
-                          {message.owner_id === userId ? 'You' : 'Participant'}
-                        </span>
-                        {message.created_at && <span>{formatRelativeTime(message.created_at)}</span>}
+                  {messages.map((message) => {
+                    const isUpvoted = upvotedMessages.has(message.id);
+                    return (
+                      <div key={message.id} className="rounded-lg border border-border bg-background p-4 shadow-sm">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground">
+                            {message.owner_id === userId ? 'You' : 'Participant'}
+                          </span>
+                          {message.created_at && <span>{formatRelativeTime(message.created_at)}</span>}
+                        </div>
+                        <p className="mt-3 text-sm text-foreground/90">{message.message}</p>
+                        <div className="mt-4 flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={`inline-flex items-center gap-1.5 ${
+                              isUpvoted ? 'border-primary text-primary' : ''
+                            }`}
+                            onClick={() => handleUpvote(message.id)}
+                          >
+                            <Heart className={`size-4 ${isUpvoted ? 'fill-current' : ''}`} />
+                            Upvote ({message.upvotes})
+                          </Button>
+                        </div>
                       </div>
-                      <p className="mt-3 text-sm text-foreground/90">{message.message}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           </div>
         </section>
+
+        {isOwner && (
+          <section className="flex justify-center border-t border-border pt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              style={{
+                color: '#A8005C', 
+                borderColor: '#A8005C',
+              }}
+              onClick={handleGenerateConsensus}
+              disabled={isGenerating}
+              className="hover:bg-fuchsia-50 hover:text-fuchsia-800"
+            >
+              {isGenerating ? (
+                'Generating...'
+              ) : (
+                <span className="inline-flex items-center  justify-center gap-2">
+                  <Sparkles className="size-5" />
+                  <span className="text-[#A8005C]">Generate AI Consensus</span>
+                </span>
+              )}
+            </Button>
+          </section>
+        )}
+        {/* --- End AI Consensus Button Section --- */}
+        
       </div>
     </main>
   );

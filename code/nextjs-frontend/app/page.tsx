@@ -6,16 +6,16 @@ export default function Dashboard() {
     <div className="min-h-screen bg-white text-gray-900">
       <main className="flex w-full flex-col items-center px-6 py-16 sm:py-24 lg:py-32">
         <div className="mb-8 rounded-full border border-pink-500  px-5 py-2 text-sm font-medium text-pink-700">
-          <span>From every opinion, a shared decision.</span>
+          <span>Consenza</span>
         </div>
 
-        <h1 className="mb-6 text-center text-4xl font-bold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-          Wisdom of the Crowd,
+        <h1 className="font-serif mb-6 text-center text-4xl font-medium leading-tight tracking-medium text-gray-900 sm:text-5xl lg:text-6xl">
+          From every opinion,
           <br />
-          Amplified by AI
+          a shared decision
         </h1>
 
-        <p className="mb-12 max-w-2xl text-center text-lg leading-relaxed text-gray-600">
+        <p className="font-sans mb-12 max-w-2xl text-center text-lg leading-relaxed text-gray-600">
           Collect diverse opinions, discover common ground, and find meaningful
           consensus through AI-powered synthesis.
         </p>

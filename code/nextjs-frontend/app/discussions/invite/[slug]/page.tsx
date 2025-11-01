@@ -381,7 +381,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                 <section className="grid gap-6 md:grid-cols-[3fr_2fr]">
                     <div className="rounded-xl border border-border bg-card shadow-sm">
                         <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                            <h2 className="text-lg font-semibold text-foreground">Invite Participants</h2>
+                            <h2 className="font-sans text-lg font-semibold text-foreground">Invite Participants</h2>
                             <span className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Users className="size-4" />
                                 {discussion.participantCount} joined
@@ -427,7 +427,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
 
                     <div className="rounded-xl border border-border bg-card shadow-sm">
                         <div className="border-b border-border px-6 py-4">
-                            <h2 className="text-lg font-semibold text-foreground">Scan QR</h2>
+                            <h2 className="font-sans text-lg font-semibold text-foreground">Scan QR</h2>
                         </div>
                         <div className="flex flex-col items-center gap-4 px-6 py-6">
                             {qrCodeDataUrl ? (
@@ -453,7 +453,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
 
                 <section className="rounded-xl border border-border bg-card shadow-sm">
                     <div className="border-b border-border px-6 py-4">
-                        <h2 className="text-lg font-semibold text-foreground">Share Your Opinion</h2>
+                        <h2 className="font-sans text-lg font-semibold text-foreground">Share Your Opinion</h2>
                     </div>
                     <div className="space-y-6 px-6 py-6">
                         {!hasSubmitted ? (
@@ -484,7 +484,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                         )}
 
                         <div className="space-y-4">
-                            <h3 className="text-base font-semibold text-foreground">Recent opinions</h3>
+                            <h3 className="font-sans text-base font-semibold text-foreground">Recent opinions</h3>
                             {messages.length === 0 ? (
                                 <p className="text-sm text-muted-foreground">No opinions yet. Be the first to share!</p>
                             ) : (

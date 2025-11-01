@@ -20,7 +20,7 @@ const InfoCard: React.FC<InfoCardProps> = ({ icon, title, description }) => (
         {icon}
       </div>
       <div className="flex-1">
-        <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+  <h3 className="font-sans text-xl font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-500">{description}</p>
       </div>
     </div>
@@ -94,7 +94,7 @@ export default function DiscussionPage() {
             </div>
             
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900">Consensus Summary</h2>
+              <h2 className="font-sans text-xl font-semibold text-gray-900">Consensus Summary</h2>
               <p className="text-base text-gray-500 mb-4">A detailed explanation of the AIs findings</p>
               
               {/* Using prose to style the dummy text */}

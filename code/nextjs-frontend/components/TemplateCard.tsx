@@ -32,7 +32,7 @@ export function TemplateCard({
         }
       )}
     >
-      <h3 className="mb-2 text-sm font-semibold text-foreground">{title}</h3>
+  <h3 className="font-sans mb-2 text-sm font-semibold text-foreground">{title}</h3>
       <p className="text-xs text-muted-foreground text-wrap">{description}</p>
     </Button>
   );

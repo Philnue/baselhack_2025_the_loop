@@ -153,7 +153,7 @@ export default function CreateDiscussionPage() {
       {isSubmitting && <LoadingOverlay message="Creating your discussion..." />}
       <main className="container mx-auto flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-8 text-3xl font-bold text-foreground sm:text-4xl">
+          <h1 className="mb-8 text-3xl font-semibold text-foreground sm:text-4xl">
             Create New Discussion
           </h1>
 
@@ -170,7 +170,7 @@ export default function CreateDiscussionPage() {
                 onClick={() => setIsTemplateSectionOpen(!isTemplateSectionOpen)}
                 className="flex h-auto w-full items-center justify-between p-0 text-left hover:bg-transparent md:w-auto"
               >
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="font-sans text-lg font-semibold text-foreground">
                   Choose a Template (Optional)
                 </h2>
                 <ChevronDown
@@ -208,7 +208,7 @@ export default function CreateDiscussionPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="topic-title"
-                className="text-sm font-medium text-foreground"
+                className="font-sans text-sm font-medium text-foreground"
               >
                 Topic Title
               </Label>
@@ -226,7 +226,7 @@ export default function CreateDiscussionPage() {
             <div className="space-y-2">
               <Label
                 htmlFor="description"
-                className="text-sm font-medium text-foreground"
+                className="font-sans text-sm font-medium text-foreground"
               >
                 Detailed Description
               </Label>
@@ -248,19 +248,19 @@ export default function CreateDiscussionPage() {
               placeholder="Add at least one tag"
             />
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end sm:gap-4">
-              <Link href="/discussions" className="order-2 sm:order-1">
+            <div className="font-sans flex flex-col gap-3  sm:flex-row sm:justify-end sm:gap-4 ">
+              <Link href="/discussions" className="order-2 sm:order-1 rounded-sm outline-[#A8005C]">
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto px-4 py-5 text-[#A8005C]"
                 >
                   Cancel
                 </Button>
               </Link>
               <Button
                 type="submit"
-                className="order-1 w-full text-white sm:order-2 sm:w-auto"
+                className="order-1 w-full rounded-sm px-4 py-5 text-white sm:order-2 sm:w-auto"
                 style={{ backgroundColor: "var(--brand)" }}
                 disabled={isSubmitting}
                 onMouseEnter={(e) => {
@@ -270,7 +270,7 @@ export default function CreateDiscussionPage() {
                   e.currentTarget.style.backgroundColor = "var(--brand)";
                 }}
               >
-                {isSubmitting ? "Creating..." : "Create Topic"}
+                {isSubmitting ? "Creating..." : "Create Discussion"}
               </Button>
             </div>
           </form>
