@@ -11,9 +11,13 @@ import { Input } from "@/components/ui/input";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createDiscussionService } from "../../services/DiscussionsService";
+import { createDiscussionService, type DiscussionTemplate } from "../../services/DiscussionsService";
 
-const TEMPLATES = [
+const TEMPLATES: Array<{
+  id: DiscussionTemplate;
+  title: string;
+  description: string;
+}> = [
   {
     id: "BINARY_PROPOSAL",
     title: "Binary Proposal",
@@ -43,7 +47,7 @@ const TEMPLATES = [
 
 export default function CreateDiscussionPage() {
   const router = useRouter();
-  const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>(
+  const [selectedTemplate, setSelectedTemplate] = React.useState<DiscussionTemplate | null>(
     null
   );
   const [isTemplateSectionOpen, setIsTemplateSectionOpen] =
@@ -84,7 +88,7 @@ export default function CreateDiscussionPage() {
 
   const createDiscussion = React.useCallback(
     async (payload: {
-      readonly template: string | null;
+      readonly template: DiscussionTemplate | null;
       readonly title: string;
       readonly description: string;
       readonly tags: string[];

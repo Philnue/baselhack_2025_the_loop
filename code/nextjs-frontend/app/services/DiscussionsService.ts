@@ -124,8 +124,17 @@ export type DiscussionTemplate =
   | "FEEDBACK_RETROSPECTIVE"
   | "FORECASTING_PLANNING";
 
+// Category enum matching backend
+export enum Category {
+  BINARY_PROPOSAL = "BINARY_PROPOSAL",
+  PRIORITIZATION_RANKING = "PRIORITIZATION_RANKING",
+  BRAINSTORMING_IDEATION = "BRAINSTORMING_IDEATION",
+  FEEDBACK_RETROSPECTIVE = "FEEDBACK_RETROSPECTIVE",
+  FORECASTING_PLANNING = "FORECASTING_PLANNING",
+}
+
 export type Discussion = {
-  template: DiscussionTemplate;
+  template: DiscussionTemplate | null;
   name: string;
   description: string;
   tags: string[];
