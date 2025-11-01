@@ -7,9 +7,10 @@ import { TemplateCard } from "@/components/TemplateCard";
 import { TagsInput } from "@/components/TagsInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, getOrCreateUserId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { redirect } from "next/navigation";
 
 const TEMPLATES = [
   {
@@ -62,13 +63,23 @@ export default function CreateDiscussionPage() {
   };
 
   const handleSubmit = (e: React.FormEvent) => {
+    const user_id = getOrCreateUserId();
+
     e.preventDefault();
     console.log({
       template: selectedTemplate,
       title: topicTitle,
       description,
       tags,
+      user_id,
     });
+
+    const jsonResponse = {
+      id: "1234-1234-1234-1234",
+      owner: user_id,
+    };
+
+    redirect("/discussions/1234-1234-1234-1234");
   };
 
   return (
