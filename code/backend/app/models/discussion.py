@@ -2,15 +2,15 @@ import enum
 import uuid
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
-from sqlmodel import ARRAY, Column, Enum, Field, Relationship, SQLModel, Text
+from sqlmodel import ARRAY, JSON, Column, Enum, Field, Relationship, SQLModel, Text
 
 
 class DiscussionTemplate(str, enum.Enum):
     FEATURE_PRIORITIZATION = "FEATURE_PRIORITIZATION"
     POLICY_FEEDBACK = "POLICY_FEEDBACK"
-    TOOL_ADAPTION = "TOOL_ADAPTION"
+    TOOL_ADOPTION = "TOOL_ADOPTION"
 
 
 class DiscussionBase(SQLModel):
@@ -28,6 +28,8 @@ class Discussion(DiscussionBase, table=True):
     messages: list["Message"] = Relationship(
         back_populates="discussion", cascade_delete=True, sa_relationship_kwargs={"order_by": "Message.created_at"}
     )
+    report: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON))
+    report_progress: Annotated[float | None, Field(ge=0, le=1)] = None
 
 
 class DiscussionCreate(DiscussionBase):
@@ -36,8 +38,11 @@ class DiscussionCreate(DiscussionBase):
 
 class DiscussionPublic(DiscussionBase):
     id: uuid.UUID
+    owner_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    report: dict[str, Any] | None
+    report_progress: float | None
 
 
 class DiscussionPublicWithMessages(DiscussionPublic):
@@ -49,6 +54,14 @@ class DiscussionUpdate(SQLModel):
     name: str | None = None
     description: str | None = None
     tags: set[str] | None = None
+
+
+class DiscussionUpdateWithReport(SQLModel):
+    name: str | None = None
+    description: str | None = None
+    tags: set[str] | None = None
+    report: dict[str, Any] | None = None
+    report_progress: float | None = None
 
 
 class MessageBase(SQLModel):
@@ -71,12 +84,14 @@ class MessageCreate(MessageBase):
 
 class MessagePublic(MessageBase):
     id: uuid.UUID
+    owner_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
 
 
 class MessagePublicWithoutDiscussionId(SQLModel):
     id: uuid.UUID
+    owner_id: uuid.UUID
     message: str
     created_at: datetime
     updated_at: datetime
