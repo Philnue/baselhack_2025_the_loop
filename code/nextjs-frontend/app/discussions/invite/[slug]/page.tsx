@@ -1,16 +1,16 @@
 'use client';
 
-import * as React from "react";
-import { use } from "react";
-import Image from "next/image";
-import QRCode from "qrcode";
-import { Copy, Users } from "lucide-react";
+import * as React from 'react';
+import { use } from 'react';
+import Image from 'next/image';
+import QRCode from 'qrcode';
+import { Copy, Users } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { getOrCreateUserId } from "@/lib/utils";
-import { createMessageService } from "../../MessagesService";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { getOrCreateUserId } from '@/lib/utils';
+import { createMessageService } from '../../MessagesService';
 
 type DiscussionDetails = {
     readonly id: string;
@@ -38,12 +38,12 @@ type MessageApiResponse = {
 
 function formatRelativeTime(dateIso?: string) {
     if (!dateIso) {
-        return "";
+        return '';
     }
 
     const date = new Date(dateIso);
     if (Number.isNaN(date.getTime())) {
-        return "";
+        return '';
     }
 
     const now = Date.now();
@@ -52,41 +52,41 @@ function formatRelativeTime(dateIso?: string) {
     const absSec = Math.abs(diffSec);
 
     const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-        ["year", 60 * 60 * 24 * 365],
-        ["month", 60 * 60 * 24 * 30],
-        ["week", 60 * 60 * 24 * 7],
-        ["day", 60 * 60 * 24],
-        ["hour", 60 * 60],
-        ["minute", 60],
-        ["second", 1],
+        ['year', 60 * 60 * 24 * 365],
+        ['month', 60 * 60 * 24 * 30],
+        ['week', 60 * 60 * 24 * 7],
+        ['day', 60 * 60 * 24],
+        ['hour', 60 * 60],
+        ['minute', 60],
+        ['second', 1],
     ];
 
-    const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+    const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
     for (const [unit, secondsInUnit] of units) {
-        if (absSec >= secondsInUnit || unit === "second") {
+        if (absSec >= secondsInUnit || unit === 'second') {
             const value = Math.round(diffSec / secondsInUnit);
             return formatter.format(value, unit);
         }
     }
 
-    return "";
+    return '';
 }
 
 export default function DiscussionInvitePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
     const userId = React.useMemo(() => getOrCreateUserId(), []);
 
-    const [shareUrl, setShareUrl] = React.useState("");
+    const [shareUrl, setShareUrl] = React.useState('');
     const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string | null>(null);
     const [copyFeedback, setCopyFeedback] = React.useState<string | null>(null);
     const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(null);
     const [messages, setMessages] = React.useState<DiscussionMessage[]>([]);
-    const [newOpinion, setNewOpinion] = React.useState("");
+    const [newOpinion, setNewOpinion] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(true);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [loadError, setLoadError] = React.useState<string | null>(null);
     const [submitError, setSubmitError] = React.useState<string | null>(null);
-        const [hasSubmitted, setHasSubmitted] = React.useState(false);
+    const [hasSubmitted, setHasSubmitted] = React.useState(false);
 
     React.useEffect(() => {
         const controller = new AbortController();
@@ -96,8 +96,8 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
             setLoadError(null);
 
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://fastapi.nutline.cloud/";
-                const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://fastapi.nutline.cloud/';
+                const normalized = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 
                 const detailPromise = fetch(`${normalized}discussions/${slug}`, {
                     signal: controller.signal,
@@ -106,105 +106,105 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                     signal: controller.signal,
                 });
 
-                        const [detailRes, messagesRes] = await Promise.all([detailPromise, messagesPromise]);
+                const [detailRes, messagesRes] = await Promise.all([detailPromise, messagesPromise]);
 
-                        const combinedMessages: DiscussionMessage[] = [];
+                const combinedMessages: DiscussionMessage[] = [];
 
-                        const collectMessages = (payload: unknown) => {
-                            if (!payload) {
-                                return;
+                const collectMessages = (payload: unknown) => {
+                    if (!payload) {
+                        return;
+                    }
+
+                    const extractArray = (value: unknown): unknown[] | null => {
+                        if (Array.isArray(value)) {
+                            return value;
+                        }
+
+                        if (typeof value === 'object' && value !== null) {
+                            const possibleItems = (value as { items?: unknown; messages?: unknown }).items;
+                            if (Array.isArray(possibleItems)) {
+                                return possibleItems;
                             }
 
-                            const extractArray = (value: unknown): unknown[] | null => {
-                                if (Array.isArray(value)) {
-                                    return value;
-                                }
-
-                                if (typeof value === "object" && value !== null) {
-                                    const possibleItems = (value as { items?: unknown; messages?: unknown }).items;
-                                    if (Array.isArray(possibleItems)) {
-                                        return possibleItems;
-                                    }
-
-                                    const possibleMessages = (value as { messages?: unknown }).messages;
-                                    if (Array.isArray(possibleMessages)) {
-                                        return possibleMessages;
-                                    }
-                                }
-
-                                return null;
-                            };
-
-                            const candidates = extractArray(payload);
-                            if (!candidates) {
-                                return;
+                            const possibleMessages = (value as { messages?: unknown }).messages;
+                            if (Array.isArray(possibleMessages)) {
+                                return possibleMessages;
                             }
+                        }
 
-                            for (const item of candidates) {
-                                if (typeof item === "object" && item !== null) {
-                                    const messageItem = item as MessageApiResponse;
-                                    combinedMessages.push({
-                                        id: String(messageItem.id ?? crypto.randomUUID()),
-                                        owner_id: String(messageItem.owner_id ?? "unknown"),
-                                        message: String(messageItem.message ?? ""),
-                                        created_at: messageItem.created_at,
-                                    });
-                                }
-                            }
-                        };
+                        return null;
+                    };
 
-                        if (detailRes.ok) {
-                            const detailJson = await detailRes.json();
-                            const participantCount = (() => {
-                                if (typeof detailJson.participant_count === "number") {
-                                    return detailJson.participant_count;
-                                }
-                                if (Array.isArray(detailJson.participants)) {
-                                    return detailJson.participants.length;
-                                }
-                                if (typeof detailJson.participantCount === "number") {
-                                    return detailJson.participantCount;
-                                }
-                                return 1;
-                            })();
+                    const candidates = extractArray(payload);
+                    if (!candidates) {
+                        return;
+                    }
 
-                            setDiscussion({
-                                id: detailJson.id ?? slug,
-                                name: detailJson.name ?? detailJson.title ?? "Discussion topic",
-                                description:
-                                    detailJson.description ??
-                                    "This discussion gathers insights from participants. Final copy will arrive once the backend response is wired.",
-                                tags: Array.isArray(detailJson.tags) ? detailJson.tags : [],
-                                owner_id: detailJson.owner_id ?? "unknown",
-                                created_at: detailJson.created_at,
-                                participantCount,
+                    for (const item of candidates) {
+                        if (typeof item === 'object' && item !== null) {
+                            const messageItem = item as MessageApiResponse;
+                            combinedMessages.push({
+                                id: String(messageItem.id ?? crypto.randomUUID()),
+                                owner_id: String(messageItem.owner_id ?? 'unknown'),
+                                message: String(messageItem.message ?? ''),
+                                created_at: messageItem.created_at,
                             });
-
-                            collectMessages(detailJson.messages);
-                        } else {
-                            throw new Error(`Unable to fetch discussion ${slug}`);
                         }
+                    }
+                };
 
-                        if (messagesRes.ok) {
-                            const messagesJson = await messagesRes.json();
-                            collectMessages(messagesJson);
+                if (detailRes.ok) {
+                    const detailJson = await detailRes.json();
+                    const participantCount = (() => {
+                        if (typeof detailJson.participant_count === 'number') {
+                            return detailJson.participant_count;
                         }
+                        if (Array.isArray(detailJson.participants)) {
+                            return detailJson.participants.length;
+                        }
+                        if (typeof detailJson.participantCount === 'number') {
+                            return detailJson.participantCount;
+                        }
+                        return 1;
+                    })();
 
-                        const uniqueMessages = Array.from(
-                            new Map(combinedMessages.map((item) => [item.id, item])).values(),
-                        );
+                    setDiscussion({
+                        id: detailJson.id ?? slug,
+                        name: detailJson.name ?? detailJson.title ?? 'Discussion topic',
+                        description:
+                            detailJson.description ??
+                            'This discussion gathers insights from participants. Final copy will arrive once the backend response is wired.',
+                        tags: Array.isArray(detailJson.tags) ? detailJson.tags : [],
+                        owner_id: detailJson.owner_id ?? 'unknown',
+                        created_at: detailJson.created_at,
+                        participantCount,
+                    });
 
-                        uniqueMessages.sort((a, b) => {
-                            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-                            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-                            return bTime - aTime;
-                        });
+                    collectMessages(detailJson.messages);
+                } else {
+                    throw new Error(`Unable to fetch discussion ${slug}`);
+                }
 
-                    setMessages(uniqueMessages);
+                if (messagesRes.ok) {
+                    const messagesJson = await messagesRes.json();
+                    collectMessages(messagesJson);
+                }
+
+                const uniqueMessages = Array.from(
+                    new Map(combinedMessages.map((item) => [item.id, item])).values()
+                );
+
+                uniqueMessages.sort((a, b) => {
+                    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return bTime - aTime;
+                });
+
+                setMessages(uniqueMessages);
             } catch (error) {
                 if (!controller.signal.aborted) {
-                    console.error("Failed to load invite data", error);
-                    setLoadError("We could not load this discussion. Please try again later.");
+                    console.error('Failed to load invite data', error);
+                    setLoadError('We could not load this discussion. Please try again later.');
                 }
             } finally {
                 if (!controller.signal.aborted) {
@@ -219,12 +219,12 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
     }, [slug]);
 
     React.useEffect(() => {
-        if (typeof window === "undefined") {
+        if (typeof window === 'undefined') {
             return;
         }
 
-        const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? "http://localhost:3000";
-        const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
+        const baseUrl = process.env.NEXT_PUBLIC_APP_BASE_URL ?? 'http://localhost:3000';
+        const normalizedBaseUrl = baseUrl.replace(/\/$/, '');
         const url = `${normalizedBaseUrl}/discussion/${slug}`;
         setShareUrl(url);
     }, [slug]);
@@ -235,13 +235,13 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
         }
 
         QRCode.toDataURL(shareUrl, {
-            errorCorrectionLevel: "M",
+            errorCorrectionLevel: 'M',
             margin: 2,
             width: 220,
         })
             .then((dataUrl) => setQrCodeDataUrl(dataUrl))
             .catch((error) => {
-                console.error("Failed to generate QR code", error);
+                console.error('Failed to generate QR code', error);
                 setQrCodeDataUrl(null);
             });
     }, [shareUrl]);
@@ -255,6 +255,10 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
         return () => window.clearTimeout(timer);
     }, [copyFeedback]);
 
+    React.useEffect(() => {
+        setHasSubmitted(messages.some((message) => message.owner_id === userId));
+    }, [messages, userId]);
+
     const handleCopyLink = React.useCallback(async () => {
         if (!shareUrl) {
             return;
@@ -262,16 +266,12 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
 
         try {
             await navigator.clipboard.writeText(shareUrl);
-            setCopyFeedback("Copied!");
+            setCopyFeedback('Copied!');
         } catch (error) {
-            console.error("Clipboard write failed", error);
-            setCopyFeedback("Copy failed");
+            console.error('Clipboard write failed', error);
+            setCopyFeedback('Copy failed');
         }
     }, [shareUrl]);
-
-    React.useEffect(() => {
-        setHasSubmitted(messages.some((message) => message.owner_id === userId));
-    }, [messages, userId]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -303,11 +303,11 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
             };
 
             setMessages((prev) => [newEntry, ...prev]);
-            setNewOpinion("");
+            setNewOpinion('');
             setHasSubmitted(true);
         } catch (error) {
-            console.error("Failed to submit message", error);
-            setSubmitError("Unable to submit your opinion right now. Please try again.");
+            console.error('Failed to submit message', error);
+            setSubmitError('Unable to submit your opinion right now. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -333,7 +333,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
             <main className="container mx-auto flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6 lg:px-8">
                 <div className="max-w-md space-y-4">
                     <h1 className="text-2xl font-semibold text-foreground">Unable to load discussion</h1>
-                    <p className="text-sm text-muted-foreground">{loadError ?? "The discussion details are unavailable at the moment."}</p>
+                    <p className="text-sm text-muted-foreground">{loadError ?? 'The discussion details are unavailable at the moment.'}</p>
                 </div>
             </main>
         );
@@ -347,7 +347,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                     <h1 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">{discussion.name}</h1>
                     <p className="mt-4 text-base leading-7 text-muted-foreground">{discussion.description}</p>
                     <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
-                        Created {discussion.created_at ? formatRelativeTime(discussion.created_at) : "just now"}
+                        Created {discussion.created_at ? formatRelativeTime(discussion.created_at) : 'just now'}
                     </p>
                     {discussion.tags.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-2">
@@ -376,7 +376,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                                 </label>
                                 <div className="flex flex-col gap-3 sm:flex-row">
                                     <Input id="invite-email" type="email" placeholder="john.doe@example.com" className="w-full bg-[#F8F9FA]" />
-                                    <Button className="w-full text-white sm:w-auto" style={{ backgroundColor: "var(--brand)" }}>
+                                    <Button className="w-full text-white sm:w-auto" style={{ backgroundColor: 'var(--brand)' }}>
                                         Send
                                     </Button>
                                 </div>
@@ -438,27 +438,32 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                         <h2 className="text-lg font-semibold text-foreground">Share Your Opinion</h2>
                     </div>
                     <div className="space-y-6 px-6 py-6">
-                                                                        {!hasSubmitted ? (
-                                        <form onSubmit={handleSubmit} className="space-y-4">
-                                            <div className="space-y-1.5">
-                                                <Textarea
-                                                    id="participant-opinion"
-                                                    placeholder="Share your thoughts..."
-                                                    className="bg-[#F8F9FA]"
-                                                    rows={5}
-                                                    value={newOpinion}
-                                                    onChange={(event) => setNewOpinion(event.target.value)}
-                                                    disabled={isSubmitting}
-                                                />
-                                            </div>
-                                            {submitError && <p className="text-sm text-red-500">{submitError}</p>}
-                                            <Button type="submit" className="w-full text-white" style={{ backgroundColor: "var(--brand)" }} disabled={isSubmitting || !newOpinion.trim()}>
-                                                {isSubmitting ? "Submitting…" : "Submit Opinion"}
-                                            </Button>
-                                        </form>
-                                    ) : (
-                                                        <p className="text-sm text-muted-foreground">You have already shared your perspective for this discussion.</p>
-                                    )}
+                        {!hasSubmitted ? (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <Textarea
+                                        id="participant-opinion"
+                                        placeholder="Share your thoughts..."
+                                        className="bg-[#F8F9FA]"
+                                        rows={5}
+                                        value={newOpinion}
+                                        onChange={(event) => setNewOpinion(event.target.value)}
+                                        disabled={isSubmitting}
+                                    />
+                                </div>
+                                {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+                                <Button
+                                    type="submit"
+                                    className="w-full text-white"
+                                    style={{ backgroundColor: 'var(--brand)' }}
+                                    disabled={isSubmitting || !newOpinion.trim()}
+                                >
+                                    {isSubmitting ? 'Submitting…' : 'Submit Opinion'}
+                                </Button>
+                            </form>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">You have already shared your perspective for this discussion.</p>
+                        )}
 
                         <div className="space-y-4">
                             <h3 className="text-base font-semibold text-foreground">Recent opinions</h3>
@@ -470,7 +475,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
                                         <div key={message.id} className="rounded-lg border border-border bg-background p-4 shadow-sm">
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <span className="font-semibold text-foreground">
-                                                    {message.owner_id === userId ? "You" : "Participant"}
+                                                    {message.owner_id === userId ? 'You' : 'Participant'}
                                                 </span>
                                                 {message.created_at && <span>{formatRelativeTime(message.created_at)}</span>}
                                             </div>
