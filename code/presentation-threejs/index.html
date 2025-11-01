@@ -73,9 +73,9 @@
       left: 0;
       width: 100vw;
       height: calc(100vh + 15vh);
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.6);
       z-index: 0;
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(1px);
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.2s ease;
@@ -168,6 +168,18 @@
     .section-image.large {
       max-width: 80vw;
       max-height: 60vh;
+    }
+    
+    /* Special smaller size for logo in 4th section */
+    .section-image.image-logo-small {
+      max-width: 30vw;
+      max-height: 25vh;
+    }
+    
+    /* Special smaller size for stop sign */
+    .section-image.image-stop-small {
+      max-width: 50vw;
+      max-height: 40vh;
     }
     
     .team-container {

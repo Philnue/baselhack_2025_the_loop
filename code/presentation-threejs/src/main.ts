@@ -63,6 +63,11 @@ sections.forEach((section, index) => {
     // Add special class for transparent images (like stop.png)
     if (section.imageUrl === '/stop.png') {
       img.classList.add('image-transparent');
+      img.classList.add('image-stop-small');
+    }
+    // Add special class for logo in 4th section (From every opinion...)
+    if (section.imageUrl === '/logo.jpeg' && section.title === 'From every opinion, a shared decision.') {
+      img.classList.add('image-logo-small');
     }
     img.alt = section.title;
     sectionEl.appendChild(img);
