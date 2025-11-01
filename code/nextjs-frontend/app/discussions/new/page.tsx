@@ -11,20 +11,21 @@ import { Input } from "@/components/ui/input";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createDiscussionService } from "../DiscussionsService";
 
 const TEMPLATES = [
   {
-    id: "tool-adoption",
+    id: "TOOL_ADOPTION",
     title: "Tool Adoption",
     description: "Discuss and decide on adopting new software for the team.",
   },
   {
-    id: "feature-prioritization",
+    id: "FEATURE_PRIORITIZATION",
     title: "Feature Prioritization",
     description: "Align on which new product features to build next.",
   },
   {
-    id: "policy-feedback",
+    id: "POLICY_FEEDBACK",
     title: "Policy Feedback",
     description: "Gather opinions and form a consensus on new policies.",
   },
@@ -78,24 +79,15 @@ export default function CreateDiscussionPage() {
       readonly description: string;
       readonly tags: string[];
     }) => {
-      // TODO: replace with API call once backend endpoint is available
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const data = await createDiscussionService({
+        template: payload.template,
+        name: payload.title,
+        description: payload.description,
+        tags: payload.tags,
+        owner_id: getOrCreateUserId(),
+      });
 
-      const normalizedTitle = payload.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "")
-        .slice(0, 48);
-
-      const randomSegment = (
-        globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
-      )
-        .replace(/-/g, "")
-        .slice(0, 10);
-
-      return normalizedTitle
-        ? `${normalizedTitle}-${randomSegment}`
-        : randomSegment;
+      return data["id"];
     },
     []
   );
