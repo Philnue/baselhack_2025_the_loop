@@ -2,17 +2,6 @@
 
 import { themeData } from "@/lib/dashboardData";
 
-const categoryColors = [
-  "#A8005C", // Brand pink
-  "#3B82F6", // Blue
-  "#F97316", // Orange
-  "#10B981", // Green
-  "#8B5CF6", // Purple
-  "#EF4444", // Red
-  "#6366F1", // Indigo
-  "#F59E0B", // Amber
-];
-
 export function TopOpinionCategories() {
   // Sort by total_weight and take top 5
   const topCategories = [...themeData]
@@ -28,11 +17,22 @@ export function TopOpinionCategories() {
   // Find max weight for percentage calculation
   const maxWeight = Math.max(...topCategories.map((c) => c.total_weight));
 
+  // Grey tones for non-highest items
+  const greyTones = [
+    "#9CA3AF", // Gray-400
+    "#6B7280", // Gray-500
+    "#4B5563", // Gray-600
+    "#374151", // Gray-700
+    "#1F2937", // Gray-800
+  ];
+
   return (
     <div className="space-y-4">
       {topCategories.map((category, index) => {
         const percentage = maxWeight > 0 ? (category.total_weight / maxWeight) * 100 : 0;
-        const color = categoryColors[index % categoryColors.length];
+        // Highest score gets magenta, others get grey tones
+        const isHighest = category.total_weight === maxWeight;
+        const color = isHighest ? "#A8005C" : greyTones[index % greyTones.length];
 
         return (
           <div key={category.theme_label} className="space-y-2">

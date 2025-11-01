@@ -2,12 +2,6 @@
 
 import { getTopSentiments } from "@/lib/dashboardData";
 
-const sentimentColors: Record<string, string> = {
-  positive: "#10B981", // Green
-  neutral: "#6B7280", // Gray
-  negative: "#EF4444", // Red
-};
-
 const sentimentLabels: Record<string, string> = {
   positive: "Positive",
   neutral: "Neutral",
@@ -23,10 +17,22 @@ export function TopSentiment() {
     );
   }
 
+  // Find max count for highest score
+  const maxCount = Math.max(...topSentiments.map((s) => s.count));
+
+  // Grey tones for non-highest items
+  const greyTones = [
+    "#9CA3AF", // Gray-400
+    "#6B7280", // Gray-500
+    "#4B5563", // Gray-600
+  ];
+
   return (
     <div className="space-y-4">
       {topSentiments.map((sentiment, index) => {
-        const color = sentimentColors[sentiment.sentiment] || "#6B7280";
+        // Highest score gets magenta, others get grey tones
+        const isHighest = sentiment.count === maxCount;
+        const color = isHighest ? "#A8005C" : greyTones[index % greyTones.length];
 
         return (
           <div key={sentiment.sentiment} className="space-y-2">

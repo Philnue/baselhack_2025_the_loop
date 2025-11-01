@@ -2,16 +2,6 @@
 
 import { getTopEmotions } from "@/lib/dashboardData";
 
-const emotionColors: Record<string, string> = {
-  joy: "#10B981", // Green
-  trust: "#3B82F6", // Blue
-  anticipation: "#F59E0B", // Amber
-  frustration: "#EF4444", // Red
-  fear: "#8B5CF6", // Purple
-  sadness: "#6366F1", // Indigo
-  annoyance: "#DC2626", // Red-600
-};
-
 const emotionLabels: Record<string, string> = {
   joy: "Joy",
   trust: "Trust",
@@ -34,11 +24,22 @@ export function TopEmotions() {
   // Find max value for percentage calculation
   const maxValue = Math.max(...topEmotions.map((e) => e.value));
 
+  // Grey tones for non-highest items
+  const greyTones = [
+    "#9CA3AF", // Gray-400
+    "#6B7280", // Gray-500
+    "#4B5563", // Gray-600
+    "#374151", // Gray-700
+    "#1F2937", // Gray-800
+  ];
+
   return (
     <div className="space-y-4">
       {topEmotions.map((emotion, index) => {
         const percentage = maxValue > 0 ? (emotion.value / maxValue) * 100 : 0;
-        const color = emotionColors[emotion.emotion] || "#6B7280";
+        // Highest score gets magenta, others get grey tones
+        const isHighest = emotion.value === maxValue;
+        const color = isHighest ? "#A8005C" : greyTones[index % greyTones.length];
 
         return (
           <div key={`${emotion.emotion}-${index}`} className="space-y-2">
