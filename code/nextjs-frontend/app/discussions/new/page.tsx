@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn, getOrCreateUserId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { createDiscussionService } from "../DiscussionsService";
+import { createDiscussionService } from "../../services/DiscussionsService";
 
 const TEMPLATES = [
   {
@@ -104,7 +104,6 @@ export default function CreateDiscussionPage() {
     }
 
     setIsSubmitting(true);
-
     getOrCreateUserId();
 
     try {
