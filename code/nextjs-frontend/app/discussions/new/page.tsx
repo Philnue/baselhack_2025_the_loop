@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { Header } from "@/components/Header";
 import { TemplateCard } from "@/components/TemplateCard";
 import { TagsInput } from "@/components/TagsInput";
 import { Button } from "@/components/ui/button";
@@ -68,8 +67,6 @@ export default function CreateDiscussionPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header showCreateButton={false} />
-
       <main className="container mx-auto flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
         <div className="mx-auto max-w-3xl">
           {/* Page Title */}
