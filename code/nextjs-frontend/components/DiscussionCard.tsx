@@ -16,7 +16,7 @@ export default function DiscussionCard({
   id,
 }: Props) {
   return (
-    <Link href={`/discussions/${id}`}>
+    <Link href={`/discussion/${id}`}>
       <div className="border rounded-md p-2 border-gray-300">
         <h1 className="font-semibold text-slate-800">{title}</h1>
 

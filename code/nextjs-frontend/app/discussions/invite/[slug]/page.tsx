@@ -9,7 +9,7 @@ import { Copy, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { getOrCreateUserId } from '@/lib/utils';
+import { getOrCreateUserId, getSessionStorage, setSessionStorage } from '@/lib/utils';
 import { createMessageService } from '../../MessagesService';
 
 type DiscussionDetails = {
@@ -75,6 +75,7 @@ function formatRelativeTime(dateIso?: string) {
 export default function DiscussionInvitePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = use(params);
     const userId = React.useMemo(() => getOrCreateUserId(), []);
+    const submissionStorageKey = React.useMemo(() => `discussion-submitted-${slug}-${userId}`, [slug, userId]);
 
     const [shareUrl, setShareUrl] = React.useState('');
     const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string | null>(null);
@@ -256,8 +257,24 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
     }, [copyFeedback]);
 
     React.useEffect(() => {
-        setHasSubmitted(messages.some((message) => message.owner_id === userId));
-    }, [messages, userId]);
+        if (!submissionStorageKey) {
+            return;
+        }
+
+        const storedFlag = getSessionStorage(submissionStorageKey);
+        if (storedFlag === 'true') {
+            setHasSubmitted(true);
+            return;
+        }
+
+        const hasUserSubmitted = messages.some((message) => message.owner_id === userId);
+        if (hasUserSubmitted) {
+            setHasSubmitted(true);
+            setSessionStorage(submissionStorageKey, 'true');
+        } else {
+            setHasSubmitted(false);
+        }
+    }, [messages, submissionStorageKey, userId]);
 
     const handleCopyLink = React.useCallback(async () => {
         if (!shareUrl) {
@@ -305,6 +322,7 @@ export default function DiscussionInvitePage({ params }: { params: Promise<{ slu
             setMessages((prev) => [newEntry, ...prev]);
             setNewOpinion('');
             setHasSubmitted(true);
+            setSessionStorage(submissionStorageKey, 'true');
         } catch (error) {
             console.error('Failed to submit message', error);
             setSubmitError('Unable to submit your opinion right now. Please try again.');

@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wisdom of the Crowd - Amplified by AI",
+  title: "Consenza",
   description:
-    "Collect diverse opinions, discover common ground, and find meaningful consensus through AI-powered synthesis.",
+    "From every opinion, a shared decision.",
 };
 
 export default function RootLayout({
