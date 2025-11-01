@@ -1,0 +1,76 @@
+"use client";
+
+import { getTopEmotions } from "@/lib/dashboardData";
+
+const emotionColors: Record<string, string> = {
+  joy: "#10B981", // Green
+  trust: "#3B82F6", // Blue
+  anticipation: "#F59E0B", // Amber
+  frustration: "#EF4444", // Red
+  fear: "#8B5CF6", // Purple
+  sadness: "#6366F1", // Indigo
+  annoyance: "#DC2626", // Red-600
+};
+
+const emotionLabels: Record<string, string> = {
+  joy: "Joy",
+  trust: "Trust",
+  anticipation: "Anticipation",
+  frustration: "Frustration",
+  fear: "Fear",
+  sadness: "Sadness",
+  annoyance: "Annoyance",
+};
+
+export function TopEmotions() {
+  const topEmotions = getTopEmotions(5);
+
+  if (topEmotions.length === 0) {
+    return (
+      <div className="text-sm text-gray-500">No emotion data available</div>
+    );
+  }
+
+  // Find max value for percentage calculation
+  const maxValue = Math.max(...topEmotions.map((e) => e.value));
+
+  return (
+    <div className="space-y-4">
+      {topEmotions.map((emotion, index) => {
+        const percentage = maxValue > 0 ? (emotion.value / maxValue) * 100 : 0;
+        const color = emotionColors[emotion.emotion] || "#6B7280";
+
+        return (
+          <div key={`${emotion.emotion}-${index}`} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {/* Color dot - visible on mobile */}
+                <div
+                  className="h-3 w-3 rounded-full lg:hidden"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {emotionLabels[emotion.emotion] || emotion.emotion}
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-gray-900">
+                {emotion.value.toFixed(2)}
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${percentage}%`,
+                  backgroundColor: color,
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+

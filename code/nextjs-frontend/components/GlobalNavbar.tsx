@@ -89,16 +89,6 @@ export function GlobalNavbar() {
 
         <nav className="hidden md:flex lg:hidden absolute left-1/2 -translate-x-1/2 items-center gap-8">
           <Link
-            href="/"
-            className={`text-sm font-medium transition-all px-3 py-2 ${
-              isActive("/")
-                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
-                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
-            }`}
-          >
-            Dashboard
-          </Link>
-          <Link
             href="/home"
             className={`text-sm font-medium transition-all px-3 py-2 ${
               isActive("/home")
@@ -107,6 +97,16 @@ export function GlobalNavbar() {
             }`}
           >
             Home
+          </Link>
+          <Link
+            href="/"
+            className={`text-sm font-medium transition-all px-3 py-2 ${
+              isActive("/")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
+          >
+            Dashboard
           </Link>
           <Link
             href="/discussions"
@@ -134,9 +134,9 @@ export function GlobalNavbar() {
         <div className="hidden md:flex items-center gap-8">
           <nav className="hidden lg:flex items-center gap-8">
             <Link
-              href="/"
+              href="/home"
               className={`text-sm font-medium transition-all px-3 py-2 ${
-                isActive("/")
+                isActive("/home")
                   ? "text-[#A8005C] underline underline-offset-4 decoration-2"
                   : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
               }`}
@@ -144,9 +144,9 @@ export function GlobalNavbar() {
               Home
             </Link>
             <Link
-              href="/home"
+              href="/"
               className={`text-sm font-medium transition-all px-3 py-2 ${
-                isActive("/home")
+                isActive("/")
                   ? "text-[#A8005C] underline underline-offset-4 decoration-2"
                   : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
               }`}
@@ -189,17 +189,6 @@ export function GlobalNavbar() {
       >
         <nav className="flex flex-col px-6 py-6 gap-2">
           <Link
-            href="/"
-            onClick={closeMobileMenu}
-            className={`text-base font-medium transition-all px-4 py-3 ${
-              isActive("/")
-                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
-                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
-            }`}
-          >
-            Dashboard
-          </Link>
-          <Link
             href="/home"
             onClick={closeMobileMenu}
             className={`text-base font-medium transition-all px-4 py-3 ${
@@ -209,6 +198,17 @@ export function GlobalNavbar() {
             }`}
           >
             Home
+          </Link>
+          <Link
+            href="/"
+            onClick={closeMobileMenu}
+            className={`text-base font-medium transition-all px-4 py-3 ${
+              isActive("/")
+                ? "text-[#A8005C] underline underline-offset-4 decoration-2"
+                : "text-gray-600 hover:text-gray-900 hover:underline hover:underline-offset-4 hover:decoration-gray-400"
+            }`}
+          >
+            Dashboard
           </Link>
           <Link
             href="/discussions"

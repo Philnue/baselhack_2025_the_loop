@@ -1,47 +1,123 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityOverTime } from "@/components/dashboard/ActivityOverTime";
+import { ImpactScore } from "@/components/dashboard/ImpactScore";
+import { TopOpinionCategories } from "@/components/dashboard/TopOpinionCategories";
+import { EngagementSnapshot } from "@/components/dashboard/EngagementSnapshot";
+import { TopEmotions } from "@/components/dashboard/TopEmotions";
+import { TopSentiment } from "@/components/dashboard/TopSentiment";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <main className="flex w-full flex-col items-center px-6 py-16 sm:py-24 lg:py-32">
-        <div className="mb-8 rounded-full border border-pink-500  px-5 py-2 text-sm font-medium text-pink-700">
-          <span>Consenza</span>
-        </div>
-
-        <h1 className="font-serif mb-6 text-center text-4xl font-medium leading-tight tracking-medium text-gray-900 sm:text-5xl lg:text-6xl">
-          From every opinion,
-          <br />
-          a shared decision
+    <div className="min-h-screen bg-white">
+      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <h1 className="mb-8 text-2xl font-semibold text-gray-900 sm:text-3xl">
+          Dashboard
         </h1>
 
-        <p className="font-sans mb-12 max-w-2xl text-center text-lg leading-relaxed text-gray-600">
-          Collect diverse opinions, discover common ground, and find meaningful
-          consensus through AI-powered synthesis.
-        </p>
+        <section className="mb-8">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">
+            My Contributions
+          </h2>
 
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button
-            variant="default"
-            size="lg"
-            asChild
-            className="h-12 rounded-sm bg-[#A8005C] px-8 text-white hover:bg-[#8A004B] transition-colors"
-          >
-            <Link href="/discussions/new">
-              <p className="text-sm font-bold">Start a Discussion</p>
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            asChild
-            className="h-12 rounded-sm border-2 border-[#A8005C] px-8 text-[#A8005C] hover:bg-pink-50 hover:text-[#A8005C] transition-colors" // Updated color
-          >
-            <Link href="/discussions">
-              <p className="text-sm font-bold">Browse Topics</p>
-            </Link>
-          </Button>
-        </div>
+          {/* Responsive Grid: 1 column on mobile, 2 columns on desktop */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Total Opinions Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Total Opinions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold text-gray-900">142</p>
+              </CardContent>
+            </Card>
+
+            {/* Discussions Joined Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Discussions Joined
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold text-gray-900">35</p>
+              </CardContent>
+            </Card>
+
+            {/* Activity Over Time Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Activity Over Time
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ActivityOverTime />
+              </CardContent>
+            </Card>
+
+            {/* Your Impact Score Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Your Impact Score
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ImpactScore score={8.2} maxScore={10} />
+              </CardContent>
+            </Card>
+
+            {/* Top Opinion Categories Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Top Opinion Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopOpinionCategories />
+              </CardContent>
+            </Card>
+
+            {/* Engagement Snapshot Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Engagement Snapshot
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EngagementSnapshot />
+              </CardContent>
+            </Card>
+
+            {/* Top Emotions Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Top Emotions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopEmotions />
+              </CardContent>
+            </Card>
+
+            {/* Top Sentiment Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Top Sentiment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopSentiment />
+              </CardContent>
+            </Card>
+          </div>
+        </section>
       </main>
     </div>
   );
