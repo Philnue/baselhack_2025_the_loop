@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import AnyHttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         secrets_dir = "/run/secrets" if Path("/run/secrets").exists() else None
 
     read_only: bool = False
+    cors_origins: AnyHttpUrl | list[AnyHttpUrl] = []
 
     database_host: str
     database_port: int
@@ -22,6 +23,14 @@ class Settings(BaseSettings):
     azure_openai_api_key: SecretStr
     azure_openai_api_version: str = "2025-04-01-preview"
     azure_openai_model: str = "gpt-4o"
+
+    @field_validator("cors_origins", mode="before")
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, list):
+            return v
+        raise ValueError(v)
 
 
 settings = Settings()  # type: ignore[call-arg]

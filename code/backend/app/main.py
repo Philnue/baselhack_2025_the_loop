@@ -1,11 +1,12 @@
 import logging
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 
 import uvicorn
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import create_engine
 
 from app.database import create_db_and_tables
@@ -31,6 +32,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     lifespan=lifespan,
 )
+
+if settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[str(cors_origin).removesuffix("/") for cors_origin in settings.cors_origins]
+        if isinstance(settings.cors_origins, Iterable)
+        else str(settings.cors_origins).removesuffix("/"),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(discussions.router)
 app.include_router(messages.router)
