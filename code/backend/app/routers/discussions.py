@@ -12,6 +12,7 @@ from app.models.discussion import (
     DiscussionPublicWithMessages,
     DiscussionUpdate,
 )
+from app.settings import settings
 
 
 router = APIRouter(
@@ -27,6 +28,12 @@ def read_discussions(session: Session = Depends(get_session)) -> list[Discussion
 
 @router.post("/", response_model=DiscussionPublic)
 def create_discussion(discussion: DiscussionCreate, session: Session = Depends(get_session)) -> Discussion:
+    if settings.read_only:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot create discussion when read-only mode is enabled",
+        )
+
     db_discussion = Discussion.model_validate(discussion)
     session.add(db_discussion)
     session.commit()
@@ -48,6 +55,12 @@ def read_discussion(discussion_id: uuid.UUID, session: Session = Depends(get_ses
 
 @router.delete("/{discussion_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_discussion(discussion_id: uuid.UUID, owner_id: uuid.UUID, session: Session = Depends(get_session)) -> None:
+    if settings.read_only:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove discussion when read-only mode is enabled",
+        )
+
     db_discussion = session.get(Discussion, discussion_id)
     if not db_discussion:
         raise HTTPException(
@@ -69,6 +82,12 @@ def remove_discussion(discussion_id: uuid.UUID, owner_id: uuid.UUID, session: Se
 def update_discussion(
     discussion_id: uuid.UUID, discussion: DiscussionUpdate, session: Session = Depends(get_session)
 ) -> Discussion:
+    if settings.read_only:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot update discussion when read-only mode is enabled",
+        )
+
     db_discussion = session.get(Discussion, discussion_id)
     if not db_discussion:
         raise HTTPException(
