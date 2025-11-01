@@ -8,7 +8,7 @@ import { TemplateCard } from "@/components/TemplateCard";
 import { TagsInput } from "@/components/TagsInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, getOrCreateUserId } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -64,44 +64,56 @@ export default function CreateDiscussionPage() {
 
     setTags((prevTags) => {
       const exists = prevTags.some(
-        (existingTag) => existingTag.toLowerCase() === normalizedTag.toLowerCase()
+        (existingTag) =>
+          existingTag.toLowerCase() === normalizedTag.toLowerCase()
       );
       return exists ? prevTags : [...prevTags, normalizedTag];
     });
   }, []);
 
-  const createDiscussion = React.useCallback(async (payload: {
-    readonly template: string | null;
-    readonly title: string;
-    readonly description: string;
-    readonly tags: string[];
-  }) => {
-    // TODO: replace with API call once backend endpoint is available
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+  const createDiscussion = React.useCallback(
+    async (payload: {
+      readonly template: string | null;
+      readonly title: string;
+      readonly description: string;
+      readonly tags: string[];
+    }) => {
+      // TODO: replace with API call once backend endpoint is available
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    const normalizedTitle = payload.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "")
-      .slice(0, 48);
+      const normalizedTitle = payload.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        .slice(0, 48);
 
-    const randomSegment = (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2))
-      .replace(/-/g, "")
-      .slice(0, 10);
+      const randomSegment = (
+        globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
+      )
+        .replace(/-/g, "")
+        .slice(0, 10);
 
-    return normalizedTitle ? `${normalizedTitle}-${randomSegment}` : randomSegment;
-  }, []);
+      return normalizedTitle
+        ? `${normalizedTitle}-${randomSegment}`
+        : randomSegment;
+    },
+    []
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
     if (!topicTitle.trim() || !description.trim() || tags.length === 0) {
-      setFormError("Please complete the topic, description, and add at least one tag.");
+      setFormError(
+        "Please complete the topic, description, and add at least one tag."
+      );
       return;
     }
 
     setIsSubmitting(true);
+
+    getOrCreateUserId();
 
     try {
       const payload = {
@@ -115,7 +127,9 @@ export default function CreateDiscussionPage() {
       router.push(`/discussions/invite/${generatedSlug}`);
     } catch (error) {
       console.error("Failed to create discussion", error);
-      setFormError("Something went wrong while creating the discussion. Please try again.");
+      setFormError(
+        "Something went wrong while creating the discussion. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +137,11 @@ export default function CreateDiscussionPage() {
 
   const LoadingOverlay = React.useMemo(
     () =>
-      function LoadingOverlayComponent({ message }: { readonly message: string }) {
+      function LoadingOverlayComponent({
+        message,
+      }: {
+        readonly message: string;
+      }) {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur">
             <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-10 py-8 shadow-lg">
