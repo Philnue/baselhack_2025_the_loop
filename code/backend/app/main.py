@@ -1,3 +1,4 @@
+import logging
 import tempfile
 
 from collections.abc import AsyncGenerator
@@ -5,11 +6,14 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 
-from fastapi import Depends, FastAPI
-from sqlmodel import Session, SQLModel, create_engine
+from fastapi import FastAPI
+from sqlmodel import SQLModel, create_engine
 
-from app.database.models.discussion import Discussion
-from app.database.session import get_session
+from app.logging import HealthCheckFilter
+from app.routers import discussion
+
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
 
 
 @asynccontextmanager
@@ -26,17 +30,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-@app.get("/")
-async def root(session: Session = Depends(get_session)) -> Discussion:
-    discussion = Discussion(
-        name="Lorem Ipsum",
-        description="Lorem Ipsum",
-    )
-    session.add(discussion)
-    session.commit()
-    session.refresh(discussion)
-    return discussion
+app.include_router(discussion.router)
 
 
 if __name__ == "__main__":
