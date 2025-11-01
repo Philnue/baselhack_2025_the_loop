@@ -13,15 +13,78 @@ export default function DiscussionsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
-          <DiscussionCard />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
+          <DiscussionCard
+            title={"Which framwork should be use ?"}
+            desc={
+              "We are creating a new web app. Discuss which framework we should use."
+            }
+            created={"15 minutes ago"}
+            responses={"100 responses"}
+            id={"12341231-123141-1231412"}
+          />
         </div>
       </div>
     </div>

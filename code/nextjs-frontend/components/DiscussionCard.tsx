@@ -9,11 +9,11 @@ interface Props {
 }
 
 export default function DiscussionCard({
-  title = "Which framwork should be use ?",
-  desc = "We are creating a new web app. Discuss which framework we should use.",
-  created = "14 minutes ago",
-  responses = "150 responses",
-  id = "12345-12345-123455-12314",
+  title,
+  desc,
+  created,
+  responses,
+  id,
 }: Props) {
   return (
     <Link href={`/discussions/${id}`}>
