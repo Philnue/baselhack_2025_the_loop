@@ -42,9 +42,12 @@ export default function Dashboard() {
           <Button
             variant="outline"
             size="lg"
+            asChild
             className="h-12 rounded-sm border-2 border-[#A8005C] px-8 text-[#A8005C] hover:bg-pink-50 hover:text-[#A8005C] transition-colors" // Updated color
           >
-            <p className="text-sm font-bold">Browse Topics</p>
+            <Link href="/discussions">
+              <p className="text-sm font-bold">Browse Topics</p>
+            </Link>
           </Button>
         </div>
       </main>
