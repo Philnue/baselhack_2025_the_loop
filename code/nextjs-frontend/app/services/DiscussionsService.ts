@@ -118,9 +118,11 @@ export async function patchDiscussionByIdService(
 // Type Definitions
 
 export type DiscussionTemplate =
-  | "FEATURE_PRIORITIZATION"
-  | "TOOL_ADOPTION"
-  | "PROCESS_IMPROVEMENT";
+  | "BINARY_PROPOSAL"
+  | "PRIORITIZATION_RANKING"
+  | "BRAINSTORMING_IDEATION"
+  | "FEEDBACK_RETROSPECTIVE"
+  | "FORECASTING_PLANNING";
 
 export type Discussion = {
   template: DiscussionTemplate;

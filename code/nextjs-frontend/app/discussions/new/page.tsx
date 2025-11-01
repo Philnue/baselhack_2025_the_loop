@@ -15,19 +15,29 @@ import { createDiscussionService } from "../../services/DiscussionsService";
 
 const TEMPLATES = [
   {
-    id: "TOOL_ADOPTION",
-    title: "Tool Adoption",
-    description: "Discuss and decide on adopting new software for the team.",
+    id: "BINARY_PROPOSAL",
+    title: "Binary Proposal",
+    description: "Vote yes or no on a specific proposal or decision.",
   },
   {
-    id: "FEATURE_PRIORITIZATION",
-    title: "Feature Prioritization",
-    description: "Align on which new product features to build next.",
+    id: "PRIORITIZATION_RANKING",
+    title: "Prioritization Ranking",
+    description: "Rank and prioritize multiple options or items.",
   },
   {
-    id: "POLICY_FEEDBACK",
-    title: "Policy Feedback",
-    description: "Gather opinions and form a consensus on new policies.",
+    id: "BRAINSTORMING_IDEATION",
+    title: "Brainstorming & Ideation",
+    description: "Generate and explore new ideas together.",
+  },
+  {
+    id: "FEEDBACK_RETROSPECTIVE",
+    title: "Feedback & Retrospective",
+    description: "Gather feedback and reflect on past experiences.",
+  },
+  {
+    id: "FORECASTING_PLANNING",
+    title: "Forecasting & Planning",
+    description: "Predict outcomes and plan for the future.",
   },
 ];
 
