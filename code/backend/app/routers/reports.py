@@ -101,7 +101,7 @@ def start_consensus_report_generation(
     background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
 ) -> None:
-    if settings.read_only:
+    if settings.read_only_mode:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot create consensus report when read-only mode is enabled",
