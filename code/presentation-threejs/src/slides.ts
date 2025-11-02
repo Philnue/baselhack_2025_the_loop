@@ -385,9 +385,15 @@ export const sections: Section[] = [
     }
   },
   {
+    title: 'Tech Stack',
+    content: [],
+    imageUrl: '/TechStack.png',
+    imageSize: 'large',
+  },
+  {
     title: 'Architectural Details',
     content: [],
-    imageUrl: '/architecture.png', // Place image in public folder
+    imageUrl: '/architecture.png',
     imageSize: 'large',
   },
   {
