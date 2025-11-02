@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import AnyHttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings
@@ -11,7 +12,7 @@ class Settings(BaseSettings):
         secrets_dir = "/run/secrets" if Path("/run/secrets").exists() else None
 
     read_only_mode: bool = False
-    cors_origins: AnyHttpUrl | list[AnyHttpUrl] = []
+    cors_origins: AnyHttpUrl | Literal["*"] | list[AnyHttpUrl | Literal["*"]] = []
 
     database_host: str
     database_port: int
