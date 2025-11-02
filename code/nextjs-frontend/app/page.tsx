@@ -1,64 +1,123 @@
-import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityOverTime } from "@/components/dashboard/ActivityOverTime";
+import { ImpactScore } from "@/components/dashboard/ImpactScore";
+import { TopOpinionCategories } from "@/components/dashboard/TopOpinionCategories";
+import { EngagementSnapshot } from "@/components/dashboard/EngagementSnapshot";
+import { TopEmotions } from "@/components/dashboard/TopEmotions";
+import { TopSentiment } from "@/components/dashboard/TopSentiment";
 
-export default function Home() {
+export default function Dashboard() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen bg-white">
+      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <h1 className="mb-8 text-2xl font-semibold text-gray-900 sm:text-3xl">
+          Dashboard
+        </h1>
+
+        <section className="mb-8">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">
+            My Contributions
+          </h2>
+
+          {/* Responsive Grid: 1 column on mobile, 2 columns on desktop */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Total Opinions Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Total Opinions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold text-gray-900">142</p>
+              </CardContent>
+            </Card>
+
+            {/* Discussions Joined Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Discussions Joined
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold text-gray-900">35</p>
+              </CardContent>
+            </Card>
+
+            {/* Activity Over Time Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Activity Over Time
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ActivityOverTime />
+              </CardContent>
+            </Card>
+
+            {/* Your Impact Score Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-gray-700">
+                  Your Impact Score
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ImpactScore score={8.2} maxScore={10} />
+              </CardContent>
+            </Card>
+
+            {/* Top Opinion Categories Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-blue-400">
+                  Top Opinion Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopOpinionCategories />
+              </CardContent>
+            </Card>
+
+            {/* Engagement Snapshot Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-blue-400">
+                  Engagement Snapshot
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EngagementSnapshot />
+              </CardContent>
+            </Card>
+
+            {/* Top Emotions Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-blue-400">
+                  Top Emotions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopEmotions />
+              </CardContent>
+            </Card>
+
+            {/* Top Sentiment Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium text-blue-400">
+                  Top Sentiment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TopSentiment />
+              </CardContent>
+            </Card>
+          </div>
+        </section>
       </main>
     </div>
   );
