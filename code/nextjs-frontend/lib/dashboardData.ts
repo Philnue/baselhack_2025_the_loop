@@ -29,7 +29,16 @@ export interface SentimentData {
   negative: number;
 }
 
-export type EmotionType = "annoyance" | "anticipation" | "fear" | "frustration" | "joy" | "none" | "sadness" | "trust";
+export type EmotionType =
+  | "annoyance"
+  | "anticipation"
+  | "fear"
+  | "frustration"
+  | "joy"
+  | "none"
+  | "sadness"
+  | "trust"
+  | "theme_label";
 
 // Theme data
 export const themeData: ThemeData[] = [
@@ -82,7 +91,7 @@ export const themeData: ThemeData[] = [
     theme_label: "Inclusivity Initiatives",
     consensus: 54,
     dominant_option: "Helped",
-    dom_share: 0.692270,
+    dom_share: 0.69227,
     avg_confidence: 0.747034,
     total_weight: 3.19,
     count: 3,
@@ -102,7 +111,7 @@ export const themeData: ThemeData[] = [
     dominant_option: "Helped",
     dom_share: 1.0,
     avg_confidence: 0.825184,
-    total_weight: 1.90,
+    total_weight: 1.9,
     count: 2,
   },
   {
@@ -179,7 +188,7 @@ export const emotionData: EmotionData[] = [
     frustration: 0.0,
     joy: 0.0,
     none: 0.336028,
-    sadness: 0.307730,
+    sadness: 0.30773,
     trust: 0.356242,
   },
   {
@@ -355,14 +364,17 @@ export const sentimentData: SentimentData[] = [
 ];
 
 // Helper functions to get top-rated data
-export function getTopEmotions(limit: number = 5): Array<{ emotion: EmotionType; value: number; theme: string }> {
-  const emotionTotals: Map<EmotionType, { value: number; themes: string[] }> = new Map();
-  
+export function getTopEmotions(
+  limit: number = 5
+): Array<{ emotion: EmotionType; value: number; theme: string }> {
+  const emotionTotals: Map<EmotionType, { value: number; themes: string[] }> =
+    new Map();
+
   emotionData.forEach((item) => {
     // Find corresponding theme data to weight by importance
-    const themeInfo = themeData.find(t => t.theme_label === item.theme_label);
+    const themeInfo = themeData.find((t) => t.theme_label === item.theme_label);
     const weight = themeInfo?.total_weight || 1.0;
-    
+
     (Object.keys(item) as EmotionType[]).forEach((emotion) => {
       if (emotion !== "theme_label") {
         const value = item[emotion];
@@ -380,7 +392,7 @@ export function getTopEmotions(limit: number = 5): Array<{ emotion: EmotionType;
       }
     });
   });
-  
+
   return Array.from(emotionTotals.entries())
     .map(([emotion, data]) => ({
       emotion,
@@ -391,23 +403,38 @@ export function getTopEmotions(limit: number = 5): Array<{ emotion: EmotionType;
     .slice(0, limit);
 }
 
-export function getTopSentiments(): Array<{ sentiment: "positive" | "neutral" | "negative"; count: number; percentage: number }> {
+export function getTopSentiments(): Array<{
+  sentiment: "positive" | "neutral" | "negative";
+  count: number;
+  percentage: number;
+}> {
   let positive = 0;
   let neutral = 0;
   let negative = 0;
-  
+
   sentimentData.forEach((item) => {
     if (item.positive === 1.0) positive++;
     else if (item.neutral === 1.0) neutral++;
     else if (item.negative === 1.0) negative++;
   });
-  
+
   const total = positive + neutral + negative;
-  
+
   return [
-    { sentiment: "positive" as const, count: positive, percentage: total > 0 ? (positive / total) * 100 : 0 },
-    { sentiment: "neutral" as const, count: neutral, percentage: total > 0 ? (neutral / total) * 100 : 0 },
-    { sentiment: "negative" as const, count: negative, percentage: total > 0 ? (negative / total) * 100 : 0 },
+    {
+      sentiment: "positive" as const,
+      count: positive,
+      percentage: total > 0 ? (positive / total) * 100 : 0,
+    },
+    {
+      sentiment: "neutral" as const,
+      count: neutral,
+      percentage: total > 0 ? (neutral / total) * 100 : 0,
+    },
+    {
+      sentiment: "negative" as const,
+      count: negative,
+      percentage: total > 0 ? (negative / total) * 100 : 0,
+    },
   ].sort((a, b) => b.count - a.count);
 }
-
