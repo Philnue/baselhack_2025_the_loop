@@ -1,4 +1,3 @@
-import logging
 import uuid
 
 from datetime import datetime
@@ -23,8 +22,6 @@ from app.settings import settings
 from app.types import Category, Dimensions
 
 
-logger = logging.getLogger("uvicorn")
-
 router = APIRouter(
     prefix="/reports",
 )
@@ -38,8 +35,6 @@ def generate_consensus_report(discussion_id: uuid.UUID, engine: Engine | Connect
             CategorySelectionGraphState(discussion=db_discussion),
             config=RunnableConfig(configurable={"llm": llm}),
         )
-
-        logger.info(str(category_selection_graph_state))
 
         category: Category = Category(category_selection_graph_state["category"])
 
@@ -56,8 +51,6 @@ def generate_consensus_report(discussion_id: uuid.UUID, engine: Engine | Connect
             config=RunnableConfig(configurable={"llm": llm}),
         )
 
-        logger.info(str(dimension_extraction_graph_state))
-
         dimensions: list[Dimensions] = dimension_extraction_graph_state["dimensions"]
 
         discussion = DiscussionUpdateWithReport(report_progress=0.5)
@@ -73,10 +66,9 @@ def generate_consensus_report(discussion_id: uuid.UUID, engine: Engine | Connect
                 discussion=db_discussion,
                 category=category,
                 dimensions=dimensions,
-            )
+            ),
+            config=RunnableConfig(configurable={"llm": llm}),
         )
-
-        logger.info(str(summary_graph_state))
 
         theme_board = cast(pd.DataFrame, summary_graph_state["theme_board"])
         sentiment_table = cast(pd.DataFrame, summary_graph_state["sentiment_table"])
@@ -128,14 +120,13 @@ def start_consensus_report_generation(
             detail="Not allowed to create consensus report",
         )
 
-    # TODO: For testing purposes, we are ignoring, whether the report is already generating or not...
-    # if db_discussion.report is not None or db_discussion.report_progress is not None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Consensus report is already generating"
-    #         if db_discussion.report is None
-    #         else "Consensus report already generated",
-    #     )
+    if db_discussion.report is not None or db_discussion.report_progress is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Consensus report is already generating"
+            if db_discussion.report is None
+            else "Consensus report already generated",
+        )
 
     discussion = DiscussionUpdateWithReport(report_progress=0)
 

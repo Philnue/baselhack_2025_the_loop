@@ -69,7 +69,11 @@ def extract_category_from_discussion_template(state: CategorySelectionGraphState
 
 def extract_category_from_discussion(state: CategorySelectionGraphState, config: RunnableConfig) -> dict:
     llm = cast(BaseChatModel, config["configurable"]["llm"])
-    structured_llm = cast(Runnable[LanguageModelInput, Category], llm.with_structured_output(Category))
+    structured_llm = cast(
+        Runnable[LanguageModelInput, Category],
+        llm.with_structured_output(Category),
+    )
+
     chain = CATEGORY_EXTRACTION_PROMPT_TEMPLATE | structured_llm
 
     category = chain.invoke(

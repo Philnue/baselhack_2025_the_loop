@@ -5,10 +5,9 @@ from typing import cast
 import numpy as np
 import pandas as pd
 
-from langchain_core.language_models import BaseChatModel
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.language_models import BaseChatModel, LanguageModelInput
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables import Runnable, RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
@@ -43,6 +42,7 @@ from app.types import (
     IsAgreeing,
     PriorityClass,
     Sentiment,
+    Summary,
 )
 
 
@@ -79,9 +79,9 @@ Produce THREE fields:
 == OUTPUT FORMAT (STRICT JSON) ==
 Return exactly one JSON object with exactly these keys:
 {{
-    "main summary": "<5-7 sentence paragraph from agreed_topics + top10_weighted_texts>",
-    "conficting statment": "<2-4 sentence paragraph from disagreed_topics + against_top7>",
-    "Top weighted points": ["<text from highlights_top3[0].text>", "<text from highlights_top3[1].text>", "<text from highlights_top3[2].text>"]
+    "main_summary": "<5-7 sentence paragraph from agreed_topics + top10_weighted_texts>",
+    "conficting_statement": "<2-4 sentence paragraph from disagreed_topics + against_top7>",
+    "top_weighted_points": ["<text from highlights_top3[0].text>", "<text from highlights_top3[1].text>", "<text from highlights_top3[2].text>"]
 }}
 
 == FINAL VALIDATION ==
@@ -115,7 +115,7 @@ class SummaryGraphState(BaseModel):
     sentiment_table: pd.DataFrame | None = None
     emotion_table: pd.DataFrame | None = None
     payload: dict | None = None
-    summary: str | None = None
+    summary: Summary | None = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -461,7 +461,7 @@ def build_executive_consensus_card(
       - Next: lower-consensus (55-min_consensus_agree) or low-confidence themes, sorted by (confidence asc).
     """
     panels_df = cast(pd.DataFrame, state.panels_df).copy()
-    dissent_df = cast(pd.DataFrame, state.dissent_df).cooy()
+    dissent_df = cast(pd.DataFrame, state.dissent_df).copy()
 
     category = state.category
 
@@ -711,8 +711,18 @@ def generate_summary(
     config: RunnableConfig,
 ) -> dict:
     llm = cast(BaseChatModel, config["configurable"]["llm"])
-    chain = SUMMARY_PROMPT_TEMPLATE | llm | StrOutputParser()
+    structured_llm = cast(
+        Runnable[
+            LanguageModelInput,
+            Summary,
+        ],
+        llm.with_structured_output(Summary),
+    )
+
+    chain = SUMMARY_PROMPT_TEMPLATE | structured_llm
+
     summary = chain.invoke({"payload": json.dumps(state.payload, ensure_ascii=False, indent=2)})
+
     return {"summary": summary}
 
 

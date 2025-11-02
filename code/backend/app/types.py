@@ -116,3 +116,9 @@ class ForecastingPlanning(CommonDimensions):
 Dimensions = (
     BinaryProposal | PrioritizationRanking | BrainstormingIdeation | FeedbackRetrospective | ForecastingPlanning
 )
+
+
+class Summary(BaseModel):
+    main_summary: str
+    conficting_statement: str
+    top_weighted_points: list[str]

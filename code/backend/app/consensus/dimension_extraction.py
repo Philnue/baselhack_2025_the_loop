@@ -143,7 +143,7 @@ def extraction_dimensions(
     structured_llm = cast(
         Runnable[
             LanguageModelInput,
-            type[Dimensions],
+            Dimensions,
         ],
         llm.with_structured_output(schema),
     )
