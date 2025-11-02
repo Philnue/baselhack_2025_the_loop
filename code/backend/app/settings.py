@@ -10,7 +10,7 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         secrets_dir = "/run/secrets" if Path("/run/secrets").exists() else None
 
-    read_only: bool = False
+    read_only_mode: bool = False
     cors_origins: AnyHttpUrl | list[AnyHttpUrl] = []
 
     database_host: str
