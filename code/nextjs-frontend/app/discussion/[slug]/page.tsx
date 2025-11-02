@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // <-- Added
 import { ArrowLeft, MessageCircle, Send, Heart, Sparkles } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   setSessionStorage,
 } from "@/lib/utils";
 import { createMessageService } from "@/app/services/MessagesService";
-
+import { createReport } from '../../services/ResultsService'; 
 
 type DiscussionDetails = {
   readonly id: string;
@@ -88,6 +89,7 @@ export default function DiscussionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const router = useRouter(); // <-- Added
   const userId = React.useMemo(() => getOrCreateUserId(), []);
   const submissionStorageKey = React.useMemo(() => `discussion-submitted-${slug}-${userId}`, [slug, userId]);
   const upvoteStorageKey = React.useMemo(() => `discussion-upvoted-${slug}-${userId}`, [slug, userId]);
@@ -104,7 +106,8 @@ export default function DiscussionPage({
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
   const [upvotedMessages, setUpvotedMessages] = React.useState(new Set<string>());
   const [isGenerating, setIsGenerating] = React.useState(false);
-  
+  const [isLocalhost, setIsLocalhost] = React.useState(false);
+
   React.useEffect(() => {
     const storedUpvotes = getSessionStorage(upvoteStorageKey);
     if (storedUpvotes) {
@@ -122,6 +125,14 @@ export default function DiscussionPage({
   React.useEffect(() => {
     setSessionStorage(upvoteStorageKey, JSON.stringify(Array.from(upvotedMessages)));
   }, [upvotedMessages, upvoteStorageKey]);
+
+  React.useEffect(() => {
+    // This check ensures the code runs only in the browser
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      setIsLocalhost(hostname === 'localhost' || hostname === '127.0.0.1');
+    }
+  }, []);
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -343,13 +354,37 @@ export default function DiscussionPage({
     );
   };
 
-  const handleGenerateConsensus = async () => {
+  // <-- Updated function
+  const handleGenerateConsensus = async (slug: string, ownerId: string) => {
     setIsGenerating(true);
-    console.log('Starting AI consensus generation for owner...');    
-    await new Promise((resolve) => setTimeout(resolve, 2500));
-    
-    console.log('AI consensus generated!');
-    setIsGenerating(false);
+    console.log('Starting AI consensus generation...');
+
+    // 1. Create a 10-second minimum delay
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 10000));
+
+    const data: { discussion_id: string; owner_id: string } = {
+      discussion_id: slug,
+      owner_id: ownerId,
+    };
+    // 2. Start the API call
+    const reportPromise = createReport(data);
+
+    try {
+      // 3. Wait for BOTH the API call and the 10-second delay to finish
+      await Promise.all([reportPromise, minDelay]);
+
+      console.log('AI consensus generated and 10s elapsed. Redirecting...');
+
+      // 4. Redirect to the results page
+      // (Using /result/ based on the <Link> href already in your code)
+      router.push(`/result/${slug}`);
+
+    } catch (error) {
+      console.error('Failed to generate AI report:', error);
+      // Optionally, show an error to the user here
+      setIsGenerating(false); // Stop loading only if there's an error
+    }
+    // On success, we redirect, so no need to set isGenerating(false)
   };
 
 
@@ -381,7 +416,8 @@ export default function DiscussionPage({
     );
   }
 
-  const isOwner = discussion.owner_id === userId && discussion.owner_id !== 'unknown';
+  // <-- Removed isOwner variable
+  const ownerId = discussion.owner_id
 
   return (
     <main className="container mx-auto flex min-h-screen flex-col px-4 py-10 sm:px-6 lg:px-8">
@@ -408,6 +444,13 @@ export default function DiscussionPage({
                 {discussion.description}
               </p>
             </div>
+            <Link href={`/result/${slug}`} className="inline-flex">
+              <Button 
+                className="text-white rounded-sm bg-[var(--brand)] hover:bg-[#8A004B]"
+              >
+                View AI Report
+              </Button>
+            </Link>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-2 font-medium text-foreground">
@@ -521,7 +564,8 @@ export default function DiscussionPage({
           </div>
         </section>
 
-        {isOwner && (
+        {/* <-- Updated render condition --> */}
+        {isLocalhost && (
           <section className="flex justify-center border-t border-border pt-8">
             <Button
               variant="outline"
@@ -530,7 +574,7 @@ export default function DiscussionPage({
                 color: '#A8005C', 
                 borderColor: '#A8005C',
               }}
-              onClick={handleGenerateConsensus}
+              onClick={() => handleGenerateConsensus(slug, ownerId)}
               disabled={isGenerating}
               className="hover:bg-fuchsia-50 hover:text-fuchsia-800"
             >
