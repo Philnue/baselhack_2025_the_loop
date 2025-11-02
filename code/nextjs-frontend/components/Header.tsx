@@ -42,7 +42,6 @@ export function Header({ showCreateButton = true }: HeaderProps) {
               Create New
             </Button>
           )}
-          <div className="size-8 rounded-full bg-gray-300"></div>
         </div>
       </div>
     </header>
