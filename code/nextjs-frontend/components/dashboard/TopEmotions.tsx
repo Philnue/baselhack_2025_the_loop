@@ -1,8 +1,7 @@
 "use client";
 
 import { getTopEmotions } from "@/lib/dashboardData";
-import { BRAND_COLOR, EMPTY_STATE_MESSAGES, GRAY_TONES } from "@/lib/dashboardConstants";
-import { ProgressBarItem } from "./ProgressBarItem";
+import { EMPTY_STATE_MESSAGES } from "@/lib/dashboardConstants";
 
 const EMOTION_LABELS: Record<string, string> = {
   joy: "Joy",
@@ -15,29 +14,30 @@ const EMOTION_LABELS: Record<string, string> = {
 };
 
 export function TopEmotions() {
-  const topEmotions = getTopEmotions(5);
+  const topEmotions = getTopEmotions(3);
 
   if (topEmotions.length === 0) {
     return <div className="text-sm text-gray-500">{EMPTY_STATE_MESSAGES.emotion}</div>;
   }
 
-  const maxValue = Math.max(...topEmotions.map((e) => e.value));
+  const totalValue = topEmotions.reduce((sum, e) => sum + e.value, 0);
 
   return (
-    <div className="space-y-4">
-      {topEmotions.map((emotion, index) => {
-        const percentage = maxValue > 0 ? (emotion.value / maxValue) * 100 : 0;
-        const isHighest = emotion.value === maxValue;
-        const color = isHighest ? BRAND_COLOR : GRAY_TONES[index % GRAY_TONES.length];
+    <div className="space-y-3">
+      {topEmotions.map((emotion) => {
+        const percentage =
+          totalValue > 0 ? Math.round((emotion.value / totalValue) * 100) : 0;
 
         return (
-          <ProgressBarItem
-            key={`${emotion.emotion}-${index}`}
-            label={EMOTION_LABELS[emotion.emotion] || emotion.emotion}
-            value={emotion.value}
-            percentage={percentage}
-            color={color}
-          />
+          <div
+            key={emotion.emotion}
+            className="flex items-center justify-between"
+          >
+            <span className="text-sm text-gray-700">
+              {EMOTION_LABELS[emotion.emotion] || emotion.emotion}
+            </span>
+            <span className="text-sm text-gray-700">{percentage}%</span>
+          </div>
         );
       })}
     </div>

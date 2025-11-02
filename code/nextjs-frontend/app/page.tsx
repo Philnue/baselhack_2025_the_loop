@@ -72,7 +72,7 @@ export default function Dashboard() {
             {/* Top Opinion Categories Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-medium text-gray-700">
+                <CardTitle className="text-base font-medium text-blue-400">
                   Top Opinion Categories
                 </CardTitle>
               </CardHeader>
@@ -84,7 +84,7 @@ export default function Dashboard() {
             {/* Engagement Snapshot Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-medium text-gray-700">
+                <CardTitle className="text-base font-medium text-blue-400">
                   Engagement Snapshot
                 </CardTitle>
               </CardHeader>
@@ -96,7 +96,7 @@ export default function Dashboard() {
             {/* Top Emotions Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-medium text-gray-700">
+                <CardTitle className="text-base font-medium text-blue-400">
                   Top Emotions
                 </CardTitle>
               </CardHeader>
@@ -108,7 +108,7 @@ export default function Dashboard() {
             {/* Top Sentiment Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base font-medium text-gray-700">
+                <CardTitle className="text-base font-medium text-blue-400">
                   Top Sentiment
                 </CardTitle>
               </CardHeader>

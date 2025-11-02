@@ -1,8 +1,7 @@
 "use client";
 
 import { getTopSentiments } from "@/lib/dashboardData";
-import { BRAND_COLOR, EMPTY_STATE_MESSAGES, GRAY_TONES } from "@/lib/dashboardConstants";
-import { ProgressBarItem } from "./ProgressBarItem";
+import { EMPTY_STATE_MESSAGES } from "@/lib/dashboardConstants";
 
 const SENTIMENT_LABELS: Record<string, string> = {
   positive: "Positive",
@@ -11,30 +10,27 @@ const SENTIMENT_LABELS: Record<string, string> = {
 };
 
 export function TopSentiment() {
-  const topSentiments = getTopSentiments();
+  const topSentiments = getTopSentiments().slice(0, 3);
 
   if (topSentiments.length === 0) {
     return <div className="text-sm text-gray-500">{EMPTY_STATE_MESSAGES.sentiment}</div>;
   }
 
-  const maxCount = Math.max(...topSentiments.map((s) => s.count));
-
   return (
-    <div className="space-y-4">
-      {topSentiments.map((sentiment, index) => {
-        const isHighest = sentiment.count === maxCount;
-        const color = isHighest ? BRAND_COLOR : GRAY_TONES[index % GRAY_TONES.length];
-
+    <div className="space-y-3">
+      {topSentiments.map((sentiment) => {
         return (
-          <ProgressBarItem
+          <div
             key={sentiment.sentiment}
-            label={SENTIMENT_LABELS[sentiment.sentiment] || sentiment.sentiment}
-            value={sentiment.count}
-            percentage={sentiment.percentage}
-            color={color}
-            valueFormatter={(v) => v.toString()}
-            showPercentage
-          />
+            className="flex items-center justify-between"
+          >
+            <span className="text-sm text-gray-700">
+              {SENTIMENT_LABELS[sentiment.sentiment] || sentiment.sentiment}
+            </span>
+            <span className="text-sm text-gray-700">
+              {Math.round(sentiment.percentage)}%
+            </span>
+          </div>
         );
       })}
     </div>
