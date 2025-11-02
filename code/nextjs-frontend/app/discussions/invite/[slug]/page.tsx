@@ -6,11 +6,11 @@ import Image from 'next/image';
 import QRCode from 'qrcode';
 import { Copy, Users } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { getOrCreateUserId, getSessionStorage, setSessionStorage } from '@/lib/utils';
-import { createMessageService } from '../../MessagesService';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { getOrCreateUserId } from "@/lib/utils";
+import { createMessageService } from "@/app/services/MessagesService";
 
 type DiscussionDetails = {
     readonly id: string;

@@ -1,5 +1,8 @@
 import DiscussionCard from "@/components/DiscussionCard";
-import { getDiscussionsService, type Discussion } from "@/app/services/DiscussionsService";
+import {
+  getDiscussionsService,
+  type Discussion,
+} from "@/app/services/DiscussionsService";
 
 function formatRelativeTime(dateIso?: string) {
   if (!dateIso) {
@@ -62,7 +65,8 @@ export default async function DiscussionsPage() {
     discussions = await getDiscussionsService();
   } catch (error) {
     console.error("Failed to load discussions list", error);
-    loadError = "We couldn't fetch discussions right now. Please try again later.";
+    loadError =
+      "We couldn't fetch discussions right now. Please try again later.";
   }
 
   const hasDiscussions = discussions.length > 0;

@@ -5,10 +5,14 @@ import { use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, MessageCircle, Send, Heart, Sparkles } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { getOrCreateUserId, getSessionStorage, setSessionStorage } from '@/lib/utils';
-import { createMessageService } from '../../discussions/MessagesService';
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  getOrCreateUserId,
+  getSessionStorage,
+  setSessionStorage,
+} from "@/lib/utils";
+import { createMessageService } from "@/app/services/MessagesService";
 
 
 type DiscussionDetails = {
@@ -38,49 +42,61 @@ type MessageApiResponse = {
 
 function formatRelativeTime(dateIso?: string) {
   if (!dateIso) {
-    return '';
+    return "";
   }
 
-  const date = new Date(dateIso);
+  let date: Date;
+  if (!dateIso.endsWith("Z") && !dateIso.includes("+")) {
+    date = new Date(dateIso + "Z"); // UTC annehmen
+  } else {
+    date = new Date(dateIso);
+  }
+
   if (Number.isNaN(date.getTime())) {
-    return '';
+    return "";
   }
 
   const now = Date.now();
-  const diffMs = date.getTime() - now;
+  const diffMs = now - date.getTime();
   const diffSec = Math.round(diffMs / 1000);
   const absSec = Math.abs(diffSec);
 
   const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-    ['year', 60 * 60 * 24 * 365],
-    ['month', 60 * 60 * 24 * 30],
-    ['week', 60 * 60 * 24 * 7],
-    ['day', 60 * 60 * 24],
-    ['hour', 60 * 60],
-    ['minute', 60],
-    ['second', 1],
+    ["year", 60 * 60 * 24 * 365],
+    ["month", 60 * 60 * 24 * 30],
+    ["week", 60 * 60 * 24 * 7],
+    ["day", 60 * 60 * 24],
+    ["hour", 60 * 60],
+    ["minute", 60],
+    ["second", 1],
   ];
 
-  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
   for (const [unit, secondsInUnit] of units) {
-    if (absSec >= secondsInUnit || unit === 'second') {
+    if (absSec >= secondsInUnit || unit === "second") {
       const value = Math.round(diffSec / secondsInUnit);
-      return formatter.format(value, unit);
+      return formatter.format(-Math.abs(value), unit);
     }
   }
 
-  return '';
+  return "";
 }
 
-export default function DiscussionPage({ params }: { params: Promise<{ slug: string }> }) {
+export default function DiscussionPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = use(params);
   const userId = React.useMemo(() => getOrCreateUserId(), []);
   const submissionStorageKey = React.useMemo(() => `discussion-submitted-${slug}-${userId}`, [slug, userId]);
   const upvoteStorageKey = React.useMemo(() => `discussion-upvoted-${slug}-${userId}`, [slug, userId]);
 
-  const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(null);
+  const [discussion, setDiscussion] = React.useState<DiscussionDetails | null>(
+    null
+  );
   const [messages, setMessages] = React.useState<DiscussionMessage[]>([]);
-  const [newOpinion, setNewOpinion] = React.useState('');
+  const [newOpinion, setNewOpinion] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -115,17 +131,25 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
       setLoadError(null);
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://fastapi.nutline.cloud/';
-        const normalized = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL ??
+          "https://fastapi.nutline.cloud/";
+        const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 
         const detailPromise = fetch(`${normalized}discussions/${slug}`, {
           signal: controller.signal,
         });
-        const messagesPromise = fetch(`${normalized}messages/?discussion_id=${slug}`, {
-          signal: controller.signal,
-        });
+        const messagesPromise = fetch(
+          `${normalized}messages/?discussion_id=${slug}`,
+          {
+            signal: controller.signal,
+          }
+        );
 
-        const [detailRes, messagesRes] = await Promise.all([detailPromise, messagesPromise]);
+        const [detailRes, messagesRes] = await Promise.all([
+          detailPromise,
+          messagesPromise,
+        ]);
 
         const combinedMessages: DiscussionMessage[] = [];
 
@@ -139,13 +163,16 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
               return value;
             }
 
-            if (typeof value === 'object' && value !== null) {
-              const possibleItems = (value as { items?: unknown; messages?: unknown }).items;
+            if (typeof value === "object" && value !== null) {
+              const possibleItems = (
+                value as { items?: unknown; messages?: unknown }
+              ).items;
               if (Array.isArray(possibleItems)) {
                 return possibleItems;
               }
 
-              const possibleMessages = (value as { messages?: unknown }).messages;
+              const possibleMessages = (value as { messages?: unknown })
+                .messages;
               if (Array.isArray(possibleMessages)) {
                 return possibleMessages;
               }
@@ -160,12 +187,12 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
           }
 
           for (const item of candidates) {
-            if (typeof item === 'object' && item !== null) {
+            if (typeof item === "object" && item !== null) {
               const messageItem = item as MessageApiResponse;
               combinedMessages.push({
                 id: String(messageItem.id ?? crypto.randomUUID()),
-                owner_id: String(messageItem.owner_id ?? 'unknown'),
-                message: String(messageItem.message ?? ''),
+                owner_id: String(messageItem.owner_id ?? "unknown"),
+                message: String(messageItem.message ?? ""),
                 created_at: messageItem.created_at,
                 upvotes: Number(messageItem.upvotes ?? 0),
               });
@@ -177,12 +204,12 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
           const detailJson = await detailRes.json();
           setDiscussion({
             id: detailJson.id ?? slug,
-            name: detailJson.name ?? detailJson.title ?? 'Discussion topic',
+            name: detailJson.name ?? detailJson.title ?? "Discussion topic",
             description:
               detailJson.description ??
-              'Facilitated conversation across participants. Description will update when the backend returns richer copy.',
+              "Facilitated conversation across participants. Description will update when the backend returns richer copy.",
             tags: Array.isArray(detailJson.tags) ? detailJson.tags : [],
-            owner_id: detailJson.owner_id ?? 'unknown',
+            owner_id: detailJson.owner_id ?? "unknown",
             created_at: detailJson.created_at,
           });
 
@@ -196,7 +223,9 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
           collectMessages(messagesJson);
         }
 
-        const uniqueMessages = Array.from(new Map(combinedMessages.map((item) => [item.id, item])).values());
+        const uniqueMessages = Array.from(
+          new Map(combinedMessages.map((item) => [item.id, item])).values()
+        );
         uniqueMessages.sort((a, b) => {
           const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
           const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -206,8 +235,10 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
         setMessages(uniqueMessages);
       } catch (error) {
         if (!controller.signal.aborted) {
-          console.error('Failed to load discussion', error);
-          setLoadError('We could not load this discussion. Please try again later.');
+          console.error("Failed to load discussion", error);
+          setLoadError(
+            "We could not load this discussion. Please try again later."
+          );
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -227,15 +258,17 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
     }
 
     const storedFlag = getSessionStorage(submissionStorageKey);
-    if (storedFlag === 'true') {
+    if (storedFlag === "true") {
       setHasSubmitted(true);
       return;
     }
 
-    const hasUserSubmitted = messages.some((message) => message.owner_id === userId);
+    const hasUserSubmitted = messages.some(
+      (message) => message.owner_id === userId
+    );
     if (hasUserSubmitted) {
       setHasSubmitted(true);
-      setSessionStorage(submissionStorageKey, 'true');
+      setSessionStorage(submissionStorageKey, "true");
     } else {
       setHasSubmitted(false);
     }
@@ -273,12 +306,14 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
       };
 
       setMessages((prev) => [newEntry, ...prev]);
-      setNewOpinion('');
+      setNewOpinion("");
       setHasSubmitted(true);
-      setSessionStorage(submissionStorageKey, 'true');
+      setSessionStorage(submissionStorageKey, "true");
     } catch (error) {
-      console.error('Failed to submit message', error);
-      setSubmitError('Unable to submit your opinion right now. Please try again.');
+      console.error("Failed to submit message", error);
+      setSubmitError(
+        "Unable to submit your opinion right now. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -334,8 +369,13 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
     return (
       <main className="container mx-auto flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6 lg:px-8">
         <div className="max-w-md space-y-4">
-          <h1 className="text-2xl font-semibold text-foreground">Unable to load discussion</h1>
-          <p className="text-sm text-muted-foreground">{loadError ?? 'The discussion details are unavailable at the moment.'}</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Unable to load discussion
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {loadError ??
+              "The discussion details are unavailable at the moment."}
+          </p>
         </div>
       </main>
     );
@@ -347,7 +387,10 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
     <main className="container mx-auto flex min-h-screen flex-col px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-10">
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <Link href="/discussions" className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80">
+          <Link
+            href="/discussions"
+            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground/80"
+          >
             <ArrowLeft className="size-4" />
             Back to discussions
           </Link>
@@ -358,8 +401,12 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
         <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="flex items-start justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{discussion.name}</h1>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">{discussion.description}</p>
+              <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
+                {discussion.name}
+              </h1>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                {discussion.description}
+              </p>
             </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -367,7 +414,9 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
               <MessageCircle className="size-4" />
               {messages.length} contributions
             </span>
-            {discussion.created_at && <span>Created {formatRelativeTime(discussion.created_at)}</span>}
+            {discussion.created_at && (
+              <span>Created {formatRelativeTime(discussion.created_at)}</span>
+            )}
           </div>
           {discussion.tags.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2">
@@ -400,14 +449,18 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
                     onChange={(event) => setNewOpinion(event.target.value)}
                     disabled={isSubmitting}
                   />
-                  {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+                  {submitError && (
+                    <p className="text-sm text-red-500">{submitError}</p>
+                  )}
                   <Button
                     type="submit"
                     className="w-full text-white"
-                    style={{ backgroundColor: 'var(--brand)' }}
+                    style={{ backgroundColor: "var(--brand)" }}
                     disabled={isSubmitting || !newOpinion.trim()}
                   >
-                    {isSubmitting ? 'Submitting…' : (
+                    {isSubmitting ? (
+                      "Submitting…"
+                    ) : (
                       <span className="inline-flex items-center justify-center gap-2">
                         <Send className="size-4" />
                         Submit opinion
@@ -417,7 +470,8 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
                 </form>
               ) : (
                 <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-                  You have already shared your opinion for this discussion. Thank you for contributing!
+                  You have already shared your opinion for this discussion.
+                  Thank you for contributing!
                 </div>
               )}
             </div>
@@ -429,7 +483,9 @@ export default function DiscussionPage({ params }: { params: Promise<{ slug: str
             </div>
             <div className="flex flex-col gap-4 px-6 py-6 pr-3">
               {messages.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No opinions yet. Be the first to share!</p>
+                <p className="text-sm text-muted-foreground">
+                  No opinions yet. Be the first to share!
+                </p>
               ) : (
                 <div className="flex max-h-[32rem] flex-col gap-4 overflow-y-auto">
                   {messages.map((message) => {
